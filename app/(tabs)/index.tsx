@@ -1,31 +1,19 @@
-import { StyleSheet } from 'react-native';
+import React, { useState } from "react";
+import { View, StatusBar } from "react-native";
+import SplashScreen from "../../components/SplashScreen";
+import AuthScreen from "../../components/AuthScreen";
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function EntryRoute() {
+  const [isReady, setIsReady] = useState(false);
 
-export default function TabOneScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View className="flex-1 bg-black">
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      {!isReady ? (
+        <SplashScreen onFinish={() => setIsReady(true)} />
+      ) : (
+        <AuthScreen />
+      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
