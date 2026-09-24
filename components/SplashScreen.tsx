@@ -17,7 +17,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
   return (
     <View className="flex-1 bg-black items-center justify-center px-6">
       <Image
-        source={require("../assets/images/qotes-logo-main.png")}
+        source={require("../src/assets/images/qotes-logo-main.png")}
         className="w-36 h-36 md:w-48 md:h-48"
         resizeMode="contain"
       />
