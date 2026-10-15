@@ -13,7 +13,7 @@ export type FormValues = Record<FieldName, string>;
 export type FieldErrors = Partial<Record<FieldName, string>>;
 
 export const LIMITS = {
-    username: { min: 3, max: 24 },
+    username: { min: 3, max: 20 },
     password: { min: 8, max: 72 },
     bio: 200,
 } as const;
@@ -55,16 +55,28 @@ export function validateAll(values: FormValues, mode: Mode): FieldErrors {
 
     if (mode === 'signup') {
         if (!values.firstName.trim()) errors.firstName = 'First name is required.';
+        else if (values.firstName.trim().length > 50) errors.firstName = 'First name must be 50 characters or fewer.';
         if (!values.lastName.trim()) errors.lastName = 'Last name is required.';
+        else if (values.lastName.trim().length > 50) errors.lastName = 'Last name must be 50 characters or fewer.';
     }
 
     const username = values.username.trim();
     if (!username) {
         errors.username = 'Username is required.';
+    } else if (mode === 'signup') {
+        if (username.length < LIMITS.username.min || username.length > LIMITS.username.max) {
+            errors.username = `Username must be ${LIMITS.username.min}-${LIMITS.username.max} characters.`;
+        } else if (!/^[a-zA-Z0-9]+$/.test(username)) {
+            errors.username = 'Only letters and numbers are allowed.';
+        }
+    } else if (username.includes('@')) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
+            errors.username = 'Enter a valid email.';
+        }
     } else if (username.length < LIMITS.username.min || username.length > LIMITS.username.max) {
-        errors.username = `Username must be ${LIMITS.username.min}-${LIMITS.username.max} characters.`;
-    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-        errors.username = 'Only letters, numbers, and underscores are allowed.';
+        errors.username = 'Username must be 3-20 characters, or enter a valid email.';
+    } else if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        errors.username = 'Enter a valid username or email.';
     }
 
     if (mode === 'signup') {
@@ -79,6 +91,8 @@ export function validateAll(values: FormValues, mode: Mode): FieldErrors {
         errors.password = 'Password is required.';
     } else if (values.password.length < LIMITS.password.min) {
         errors.password = `Password must be at least ${LIMITS.password.min} characters.`;
+    } else if (values.password.length > LIMITS.password.max) {
+        errors.password = `Password must be ${LIMITS.password.max} characters or fewer.`;
     }
 
     if (mode === 'signup' && values.bio.length > LIMITS.bio) {

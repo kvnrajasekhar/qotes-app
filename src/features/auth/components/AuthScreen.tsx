@@ -168,10 +168,10 @@ export default function AuthScreen({ initialMode = 'signin' }: { initialMode?: M
       }
       // The signup response carries no token, so sign in right away with the same credentials.
       const token = await authApi.signin({
-        username: values.username.trim(),
+        identifier: values.username.trim(),
         password: values.password,
       });
-      await signIn(token); // persists the token; <App /> then swaps this screen for the feed
+      await signIn(token);
     } catch (err) {
       if (accountCreated) {
         // Account exists; only the automatic sign-in failed. Hand over to the sign-in form.
@@ -296,7 +296,7 @@ export default function AuthScreen({ initialMode = 'signin' }: { initialMode?: M
                 label={isSignup ? 'Username' : 'Username or email'}
                 hint={
                   isSignup
-                    ? `Letters, numbers and underscores. ${LIMITS.username.min}–${LIMITS.username.max} characters.`
+                    ? `Letters and numbers. ${LIMITS.username.min}–${LIMITS.username.max} characters.`
                     : undefined
                 }
                 autoCapitalize="none"

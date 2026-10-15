@@ -1,10 +1,9 @@
 // app/_layout.tsx
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "../src/features/auth/auth/AuthProvider";
-import { authStorage } from "../src/shared/lib/storage";
+import { AuthProvider, useAuth } from "../src/features/auth/auth/AuthProvider";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
@@ -19,54 +18,40 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const router = useRouter();
-  const segments = useSegments();
-
-useEffect(() => {
-  async function prepare() {
-    try {
-      const [tokens] = await Promise.all([
-        authStorage.getTokens(),
-        new Promise((resolve) => setTimeout(resolve, 2000)),
-      ]);
-      setIsAuthenticated(!!tokens?.accessToken);
-    } catch {
-      setIsAuthenticated(false);
-    } finally {
-      setIsReady(true);
-      await SplashScreen.hideAsync();
-    }
-  }
-  prepare();
-}, []);
-
-  useEffect(() => {
-    if (!isReady || isAuthenticated === null) return;
-
-    const currentSegment = segments[0] as string | undefined;
-
-    if (!isAuthenticated) {
-      // If not logged in and not already on auth, send to auth
-      if (currentSegment !== "auth") {
-        router.replace("/auth");
-      }
-    } else {
-      // If logged in and on auth or index, send to tabs/feed
-      if (currentSegment === "auth" || !currentSegment) {
-        router.replace("/(tabs)/feed");
-      }
-    }
-  }, [isReady, isAuthenticated, segments]);
-
-  if (!isReady) return null;
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Slot />
+        <AuthGate />
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function AuthGate() {
+  const { token, isReady } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (isReady) void SplashScreen.hideAsync();
+  }, [isReady]);
+
+  useEffect(() => {
+    if (!isReady) return;
+
+    const currentSegment = segments[0] as string | undefined;
+    // Login lives at /auth; recovery screens live in the (auth) route group.
+    const inAuthFlow = currentSegment === "auth" || currentSegment === "(auth)";
+
+    if (!token) {
+      if (!inAuthFlow) {
+        router.replace("/auth");
+      }
+    } else if (inAuthFlow || !currentSegment) {
+      router.replace("/(tabs)");
+    }
+  }, [isReady, token, segments, router]);
+
+  if (!isReady) return null;
+  return <Slot />;
 }

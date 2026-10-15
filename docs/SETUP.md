@@ -270,7 +270,7 @@ Create `.env` file in `qotes-app/` directory:
 
 ```bash
 # API Configuration
-EXPO_PUBLIC_API_URL=http://localhost:3000/v1
+EXPO_PUBLIC_API_URL=http://localhost:3000
 EXPO_PUBLIC_WS_URL=ws://localhost:3000
 
 # App Configuration
