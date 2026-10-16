@@ -3,8 +3,8 @@ import type { ImagePickerAsset } from 'expo-image-picker';
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../../../shared/lib/env';
 import type { FormValues } from '../lib/validation';
 
-const SIGNUP_PATH = '/v1/auth/signup';
-const LOGIN_PATH = '/v1/auth/login';
+const SIGNUP_PATH = '/auth/signup';
+const LOGIN_PATH = '/auth/login';
 
 export class ApiError extends Error {
     status: number;

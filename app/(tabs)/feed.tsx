@@ -4,7 +4,7 @@
 // import { feedStorage, authStorage } from "../../src/shared/lib/storage";
 // import axios from "axios";
 
-// const API_URL = "http://localhost:3030/v1/feed"; // or 10.0.2.2 on Android[cite: 12]
+// const API_URL = "http://localhost:3030/feed"; // or 10.0.2.2 on Android[cite: 12]
 
 // export default function FeedScreen() {
 //   // Read previous session feed directly from MMKV for instant paint

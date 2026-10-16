@@ -40,7 +40,7 @@ export interface FeedPage {
   pagination: FeedPagination;
 }
 
-/** Standard API envelope for GET /v1/feed/global. */
+/** Standard API envelope for GET /feed/global. */
 export interface FeedResponse {
   success: boolean;
   statusCode: number;

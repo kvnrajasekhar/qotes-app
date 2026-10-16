@@ -11,7 +11,7 @@ import {
 } from '../types/feed.types';
 
 /** Per the API spec. NOTE: the NestJS controller currently mounts the global feed at `GET /feed`. */
-export const FEED_GLOBAL_PATH = '/v1/feed/global';
+export const FEED_GLOBAL_PATH = '/feed';
 
 export class FeedApiError extends Error {
   status: number;

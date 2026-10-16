@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** September 25, 2026  
-**Base URL:** `https://api.qotes.com/v1`  
+**Base URL:** `https://api.qotes.com`  
 **Document Owner:** K.V.N. Rajasekhar (Qotes Eng. Team head)
 
 ---
@@ -121,7 +121,7 @@ All error responses follow this standard envelope format:
 
 ### 2.1 Register
 
-**Endpoint**: `POST /v1/auth/signup`  
+**Endpoint**: `POST /auth/signup`  
 **Authentication**: None  
 **Rate Limit**: 3 requests per minute
 
@@ -154,7 +154,7 @@ All error responses follow this standard envelope format:
 
 ### 2.2 Login
 
-**Endpoint**: `POST /v1/auth/login`  
+**Endpoint**: `POST /auth/login`  
 **Authentication**: None  
 **Rate Limit**: 5 requests per minute
 
@@ -191,7 +191,7 @@ Set-Cookie: refreshToken=...; HttpOnly; Secure; Max-Age=604800; Path=/
 
 ### 2.3 Refresh Token
 
-**Endpoint**: `POST /v1/auth/refresh`  
+**Endpoint**: `POST /auth/refresh`  
 **Authentication**: Refresh token (httpOnly cookie)  
 **Rate Limit**: 10 requests per minute
 
@@ -218,7 +218,7 @@ Cookie: refreshToken=...
 
 ### 2.4 Logout
 
-**Endpoint**: `POST /v1/auth/logout`  
+**Endpoint**: `POST /auth/logout`  
 **Authentication**: Bearer JWT (access token)  
 **Rate Limit**: None
 
@@ -245,7 +245,7 @@ Set-Cookie: refreshToken=; HttpOnly; Secure; Max-Age=0; Path=/
 
 ### 2.5 Forgot Password
 
-**Endpoint**: `POST /v1/auth/forgot-password`  
+**Endpoint**: `POST /auth/forgot-password`  
 **Authentication**: None  
 **Rate Limit**: 3 requests per minute
 
@@ -268,7 +268,7 @@ Set-Cookie: refreshToken=; HttpOnly; Secure; Max-Age=0; Path=/
 
 ### 2.6 Reset Password
 
-**Endpoint**: `POST /v1/auth/forgotpassword/:userId/:token`  
+**Endpoint**: `POST /auth/forgotpassword/:userId/:token`  
 **Authentication**: None  
 **Rate Limit**: 3 requests per minute
 
@@ -300,7 +300,7 @@ Set-Cookie: refreshToken=; HttpOnly; Secure; Max-Age=0; Path=/
 
 ### 3.1 Create Quote
 
-**Endpoint**: `POST /v1/quote`  
+**Endpoint**: `POST /quote`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 10 requests per minute
 
@@ -353,7 +353,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 3.2 Get Quote by ID
 
-**Endpoint**: `GET /v1/quote/:id`  
+**Endpoint**: `GET /quote/:id`  
 **Authentication**: None (public)  
 **Rate Limit**: 30 requests per minute
 
@@ -398,7 +398,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 3.3 Get All Quotes (Paginated)
 
-**Endpoint**: `GET /v1/quote`  
+**Endpoint**: `GET /quote`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -450,7 +450,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 3.4 Update Quote
 
-**Endpoint**: `PATCH /v1/quote/:id`  
+**Endpoint**: `PATCH /quote/:id`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 10 requests per minute
 
@@ -505,7 +505,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 3.5 Delete Quote
 
-**Endpoint**: `DELETE /v1/quote/:id`  
+**Endpoint**: `DELETE /quote/:id`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 10 requests per minute
 
@@ -531,7 +531,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 3.6 Get User Quotes
 
-**Endpoint**: `GET /v1/quote/me`  
+**Endpoint**: `GET /quote/me`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -587,7 +587,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 4.1 Global Feed
 
-**Endpoint**: `GET /v1/feed/global`  
+**Endpoint**: `GET /feed/global`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -642,7 +642,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 4.2 Following Feed
 
-**Endpoint**: `GET /v1/feed/following`  
+**Endpoint**: `GET /feed/following`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -697,7 +697,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 4.3 Discover Feed
 
-**Endpoint**: `GET /v1/feed/discover`  
+**Endpoint**: `GET /feed/discover`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -752,7 +752,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 4.4 User Quotes Feed
 
-**Endpoint**: `GET /v1/feed/q/:targetuserId`  
+**Endpoint**: `GET /feed/q/:targetuserId`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -814,7 +814,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 5.1 Toggle Reaction
 
-**Endpoint**: `POST /v1/reaction/:quoteId/toggle`  
+**Endpoint**: `POST /reaction/:quoteId/toggle`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 20 requests per minute
 
@@ -857,7 +857,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 5.2 Get Reaction Breakdown
 
-**Endpoint**: `GET /v1/reaction/:quoteId`  
+**Endpoint**: `GET /reaction/:quoteId`  
 **Authentication**: None (public)  
 **Rate Limit**: 30 requests per minute
 
@@ -887,7 +887,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 5.3 Get Reaction Users
 
-**Endpoint**: `GET /v1/reaction/:quoteId/users`  
+**Endpoint**: `GET /reaction/:quoteId/users`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -934,7 +934,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 6.1 Get User Collections
 
-**Endpoint**: `GET /v1/collections`  
+**Endpoint**: `GET /collections`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -972,7 +972,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 6.2 Create Collection
 
-**Endpoint**: `POST /v1/collections`  
+**Endpoint**: `POST /collections`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 10 requests per minute
 
@@ -1010,7 +1010,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 6.3 Get Collection Items
 
-**Endpoint**: `GET /v1/collections/:id/items`  
+**Endpoint**: `GET /collections/:id/items`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -1067,7 +1067,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 6.4 Add Item to Collection
 
-**Endpoint**: `POST /v1/collections/:id/items`  
+**Endpoint**: `POST /collections/:id/items`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 20 requests per minute
 
@@ -1104,7 +1104,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 6.5 Remove Item from Collection
 
-**Endpoint**: `DELETE /v1/collections/:id/items/:quoteId`  
+**Endpoint**: `DELETE /collections/:id/items/:quoteId`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 20 requests per minute
 
@@ -1136,7 +1136,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 7.1 Toggle Follow
 
-**Endpoint**: `POST /v1/user/:id/follow`  
+**Endpoint**: `POST /user/:id/follow`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 20 requests per minute
 
@@ -1165,7 +1165,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 7.2 Get User Followers
 
-**Endpoint**: `GET /v1/user/:userId/followers`  
+**Endpoint**: `GET /user/:userId/followers`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -1207,7 +1207,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 7.3 Get User Following
 
-**Endpoint**: `GET /v1/user/:userId/following`  
+**Endpoint**: `GET /user/:userId/following`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -1249,7 +1249,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 7.4 Update User Preferences
 
-**Endpoint**: `POST /v1/user/:id/preferences`  
+**Endpoint**: `POST /user/:id/preferences`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 10 requests per minute
 
@@ -1290,7 +1290,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 8.1 Get User Profile
 
-**Endpoint**: `GET /v1/user/u/:username`  
+**Endpoint**: `GET /user/u/:username`  
 **Authentication**: None (public)  
 **Rate Limit**: 30 requests per minute
 
@@ -1327,7 +1327,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 8.2 Get Current User Profile
 
-**Endpoint**: `GET /v1/user/profile/me`  
+**Endpoint**: `GET /user/profile/me`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -1357,7 +1357,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 8.3 Update Current User Profile
 
-**Endpoint**: `PATCH /v1/user/profile/me`  
+**Endpoint**: `PATCH /user/profile/me`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 10 requests per minute
 
@@ -1401,7 +1401,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 8.4 Update User Avatar
 
-**Endpoint**: `PUT /v1/user/avatar`  
+**Endpoint**: `PUT /user/avatar`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 5 requests per hour
 
@@ -1429,7 +1429,7 @@ avatar: File (image/*, max 5MB)
 
 ### 8.5 Get Suggested Users
 
-**Endpoint**: `GET /v1/user/suggested`  
+**Endpoint**: `GET /user/suggested`  
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -1667,12 +1667,12 @@ Decoded:
 
 **Initial Request**:
 ```
-GET /v1/feed/global?limit=10
+GET /feed/global?limit=10
 ```
 
 **Subsequent Request**:
 ```
-GET /v1/feed/global?limit=10&cursor=eyJpZCI6IjUwN2YxZjc3YmNmODZjZDc5OTQzOTAxMSIsImNyZWF0ZWRBdCI6IjIwMjYtMDktMjVUMTA6MzA6MDAuMDAwWiJ9
+GET /feed/global?limit=10&cursor=eyJpZCI6IjUwN2YxZjc3YmNmODZjZDc5OTQzOTAxMSIsImNyZWF0ZWRBdCI6IjIwMjYtMDktMjVUMTA6MzA6MDAuMDAwWiJ9
 ```
 
 **Response Meta**:

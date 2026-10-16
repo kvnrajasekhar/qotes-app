@@ -31,7 +31,7 @@ async function post(path: string, body: Record<string, string>): Promise<void> {
 
 /** POST /auth/forgot-password. The server answers generically whether or not the account exists. */
 export function requestPasswordReset(email: string): Promise<void> {
-  return post('/v1/auth/forgot-password', { email });
+  return post('/auth/forgot-password', { email });
 }
 
 /** POST /auth/forgotpassword/:userId/:token */
@@ -43,7 +43,7 @@ export function resetPassword(params: {
 }): Promise<void> {
   const { userId, token, newPassword, cnfPassword } = params;
   return post(
-    `/v1/auth/forgotpassword/${encodeURIComponent(userId)}/${encodeURIComponent(token)}`,
+    `/auth/forgotpassword/${encodeURIComponent(userId)}/${encodeURIComponent(token)}`,
     { newPassword, cnfPassword },
   );
 }
