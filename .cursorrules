@@ -1,0 +1,27 @@
+# Qotes Frontend Rules
+
+- Scope: frontend architecture, client behavior, and design system only. Do not add server specifications or server-side patterns.
+- Before UI work, read [`dev_docs/UI_DESIGN_SPEC.md`](./dev_docs/UI_DESIGN_SPEC.md). Before structure/data work, read [`dev_docs/frontend_directory_layout_scalable_architecture.md`](./dev_docs/frontend_directory_layout_scalable_architecture.md) and [`dev_docs/frontend_architecture_stack_documentation.md`](./dev_docs/frontend_architecture_stack_documentation.md). Refer to [`docs/PRD.md`](./docs/PRD.md), [`docs/API_SPEC.md`](./docs/API_SPEC.md), and [`docs/SETUP.md`](./docs/SETUP.md) only for relevant product/client details.
+- Expo SDK 57 project. Use <https://docs.expo.dev/versions/v57.0.0/> for SDK guidance. Check `package.json` before using packages.
+- TypeScript is strict. Current `@/*` maps to repository root (`./*`), so use paths like `@/src/features/feed/...`; do not assume alias-to-`src`.
+
+## Boundaries
+
+- Every file in `app/` must be **under 20 LOC**. Route files only declare navigation, read needed route params, and delegate immediately to a feature screen. Layout files contain minimal router configuration only.
+- Never put business logic, fetching, TanStack Query hooks, feature state, or screen/layout containers in `app/`.
+- Feature-private code stays inside `src/features/<domain>/` (`auth`, `feed`, `reactions`, `compose`, `collections`, `profile`; `notifications` exists too). Never import another feature's private internals.
+- `src/shared/` is only for code used by **2+ distinct features**. Shared code must not import feature internals.
+- Centralize Axios, typed/versioned contracts, Bearer injection, and silent single-flight 401 refresh/retry-once behavior in `src/core/api/`.
+- TanStack Query v5 owns server state and caching; Zustand is for UI-only state.
+- Tokens: `expo-secure-store`. Cache/settings: `react-native-mmkv`. **Never AsyncStorage.**
+
+## Product and design
+
+- Quotes are plain text only. No quote media picker, attachments, generated images, banners, collection covers, or rich-text editing. Avatar is the only image exception; picker/upload is avatar-only, with monogram fallback.
+- Keep quote author (speaker) visually distinct from creator (posting account).
+- Use UI-spec reaction mapping for Insightful, Empowering, Resonant, Artistic, and Clap; never duplicate or guess the mapping.
+- Follow the monochrome tokens, Merriweather quote / Inter UI hierarchy, and canonical spacing scale `4, 8, 12, 16, 24, 32, 48`. No arbitrary spacing, shadows, or decorative effects.
+- Never clamp/truncate quote text. Preserve line breaks.
+- Support light/dark, dynamic type, reduced motion, contrast, screen readers, web focus, and hit targets of at least 44×44. Color alone is not a state indicator.
+
+Inspect local patterns before editing. Keep changes surgical, preserve unrelated worktree edits, and run the narrowest relevant validation. Do not swallow errors or use success-shaped fallbacks.
