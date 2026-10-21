@@ -80,6 +80,8 @@ export function useInfiniteFeed(category: FeedCategory = 'All', limit: number = 
       : undefined,
     // Mark hydrated data as already stale so it paints instantly AND revalidates on mount.
     initialDataUpdatedAt: 0,
+    // Fail fast so an unreachable server falls through to the empty state, not a 7s spinner.
+    retry: 1,
   });
 
   const quotes = useMemo(() => flattenUnique(query.data?.pages, category), [query.data?.pages, category]);

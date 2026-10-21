@@ -59,14 +59,22 @@ export const authStorage = {
     const refreshToken = await SecureStore.getItemAsync("refreshToken");
     return { accessToken, refreshToken };
   },
-  async setTokens(accessToken: string, refreshToken: string) {
+  async setTokens(accessToken: string, refreshToken?: string) {
     if (Platform.OS === "web") {
       localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
+      if (refreshToken === undefined) {
+        localStorage.removeItem("refreshToken");
+      } else {
+        localStorage.setItem("refreshToken", refreshToken);
+      }
       return;
     }
     await SecureStore.setItemAsync("accessToken", accessToken);
-    await SecureStore.setItemAsync("refreshToken", refreshToken);
+    if (refreshToken === undefined) {
+      await SecureStore.deleteItemAsync("refreshToken");
+    } else {
+      await SecureStore.setItemAsync("refreshToken", refreshToken);
+    }
   },
   async clear() {
     if (Platform.OS === "web") {

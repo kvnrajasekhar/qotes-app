@@ -41,9 +41,8 @@ async function post(path: string, body: string | FormData): Promise<ApiResponse 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    let response: Response;
     try {
-        response = await fetch(`${API_BASE_URL}${path}`, {
+        const response = await fetch(`${API_BASE_URL}${path}`, {
             method: 'POST',
             headers: body instanceof FormData
                 ? { Accept: 'application/json' }
@@ -51,7 +50,21 @@ async function post(path: string, body: string | FormData): Promise<ApiResponse 
             body,
             signal: controller.signal,
         });
-    } catch {
+
+        let json: unknown = null;
+        try {
+            json = await response.json();
+        } catch (error) {
+            if (controller.signal.aborted) throw error;
+        }
+
+        if (!response.ok) {
+            throw new ApiError(response.status, getMessage(json) || 'Something went wrong. Try again.');
+        }
+
+        return isRecord(json) ? json as ApiResponse : null;
+    } catch (error) {
+        if (error instanceof ApiError) throw error;
         const message = controller.signal.aborted
             ? 'The request timed out. Please try again.'
             : 'Network error. Check your connection and try again.';
@@ -59,13 +72,6 @@ async function post(path: string, body: string | FormData): Promise<ApiResponse 
     } finally {
         clearTimeout(timer);
     }
-
-    const json = await response.json().catch(() => null) as unknown;
-    if (!response.ok) {
-        throw new ApiError(response.status, getMessage(json) || 'Something went wrong. Try again.');
-    }
-
-    return isRecord(json) ? json as ApiResponse : null;
 }
 
 export async function signup(values: FormValues, avatar: ImagePickerAsset | null): Promise<void> {

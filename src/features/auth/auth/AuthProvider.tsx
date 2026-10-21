@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             token,
             isReady,
             signIn: async (next: string) => {
-                await authStorage.setTokens(next, '');
+                await authStorage.setTokens(next);
                 setToken(next);
             },
             signOut: async () => {

@@ -31,6 +31,7 @@ import {
   type Mode,
 } from '../lib/validation';
 import { Field, type InputHandle } from './auth/Field';
+import { NoticeCard } from './auth/NoticeCard';
 import { ProfilePreview } from './auth/ProfilePreview';
 import { SegmentedControl } from './auth/SegmentedControl';
 const BrandLogo = require('./qotes-logo-main.png');
@@ -260,7 +261,18 @@ export default function AuthScreen({ initialMode = 'signin' }: { initialMode?: M
               ]}
             />
 
-
+            {banner && (
+              <NoticeCard
+                title={
+                  banner.tone === 'error'
+                    ? isSignup ? 'Could not create account' : 'Sign-in failed'
+                    : 'Account created'
+                }
+                tone={banner.tone === 'error' ? 'error' : 'neutral'}
+              >
+                {banner.text}
+              </NoticeCard>
+            )}
 
             <View className="gap-4">
               {isSignup && (
