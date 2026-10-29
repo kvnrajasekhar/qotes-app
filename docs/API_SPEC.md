@@ -218,7 +218,7 @@ Cookie: refreshToken=...
 
 ### 2.4 Logout
 
-**Endpoint**: `POST /auth/logout`  
+**Endpoint**: `POST /auth/logout`
 **Authentication**: Bearer JWT (access token)  
 **Rate Limit**: None
 

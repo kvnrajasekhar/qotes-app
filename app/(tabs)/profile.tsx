@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../../src/shared/components/PlaceholderScreen';
+import { CurrentUserProfileScreen } from '../../src/features/profile/screens/CurrentUserProfileScreen';
 
 export default function ProfileRoute() {
-  return <PlaceholderScreen title="Your profile" description="Your quotes, collections and settings will live here." />;
+  return <CurrentUserProfileScreen />;
 }

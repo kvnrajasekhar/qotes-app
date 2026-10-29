@@ -52,8 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setToken(next);
             },
             signOut: async () => {
-                await authStorage.clear();
-                setToken(null);
+                try {
+                    await authStorage.clear();
+                } finally {
+                    setToken(null);
+                }
             },
         }),
         [token, isReady],

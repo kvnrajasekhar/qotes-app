@@ -52,7 +52,7 @@ export const Field = forwardRef<InputHandle, Props>(function Field(
     },
     ref,
 ) {
-    const inputRef = useRef<TextInput>(null);
+    const inputRef = useRef<any>(null);
     const [isFocused, setIsFocused] = useState(false);
     const isDark = useColorScheme() === 'dark';
 

@@ -1,12 +1,17 @@
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Search } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View, type ListRenderItem } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Platform, Pressable, RefreshControl, Text, View, type ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLogout } from '../../auth';
+import { useCurrentUserProfile } from '../../profile';
 import { useTheme } from '../../../shared/hooks/useTheme';
+import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
 import { fonts } from '../../../shared/tokens/typography';
 import { CategoryPills } from '../components/CategoryPills';
+import { ProfileDrawer } from '../components/ProfileDrawer';
 import { QuoteCard } from '../components/QuoteCard';
 import { useInfiniteFeed } from '../hooks/useInfiniteFeed';
 import type { FeedCategory, QuoteCreator, QuoteItem } from '../types/feed.types';
@@ -34,9 +39,13 @@ export function GlobalFeedScreen({
   onOpenUser,
   onOpenQuote,
 }: GlobalFeedScreenProps) {
+  const router = useRouter();
   const { colors, isDark } = useTheme('app');
   const [category, setCategory] = useState<FeedCategory>('All');
   const [pulling, setPulling] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { profile } = useCurrentUserProfile();
+  const { logout, isLoggingOut } = useLogout();
 
   const { quotes, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading, isError, error } =
     useInfiniteFeed(category);
@@ -53,6 +62,23 @@ export function GlobalFeedScreen({
   const onEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleLogout = async () => {
+    setIsDrawerOpen(false);
+    const result = await logout();
+    if (!result.serverLogoutSucceeded) {
+      showMessage(
+        'Signed out on this device.',
+        'The server could not end your session. It may remain active until it expires.',
+      );
+    }
+    if (result.localCleanupError) {
+      showMessage(
+        'Could not clear saved credentials.',
+        'You are signed out in this app, but stored credentials could not be removed.',
+      );
+    }
+  };
 
   const renderItem: ListRenderItem<QuoteItem> = useCallback(
     ({ item }) => (
@@ -77,6 +103,7 @@ export function GlobalFeedScreen({
         </View>
       );
     }
+
     if (isError) {
       return (
         <View className="flex-1 items-center justify-center gap-4 px-8 py-24">
@@ -96,6 +123,7 @@ export function GlobalFeedScreen({
         </View>
       );
     }
+
     return (
       <View className="flex-1 items-center justify-center gap-2 px-8 py-24">
         <Text style={{ fontFamily: fonts.serif }} className="text-center text-xl leading-8 text-neutral-900 dark:text-neutral-100">
@@ -117,13 +145,20 @@ export function GlobalFeedScreen({
         {/* Sticky top bar + category rail */}
         <View className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black">
           <View className="h-14 flex-row items-center justify-between px-4">
-            <Text
-              accessibilityRole="header"
-              style={{ fontFamily: fonts.serifBold, fontWeight: '700' }}
-              className="text-[26px] tracking-tight text-neutral-900 dark:text-neutral-100"
+            <Pressable
+              onPress={() => setIsDrawerOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Open navigation menu"
+              hitSlop={8}
+              className="h-11 w-11 items-center justify-center active:opacity-70"
             >
-              Qotes
-            </Text>
+              <MonogramAvatar
+                username={profile?.username ?? 'me'}
+                displayName={profile?.displayName}
+                avatarUrl={profile?.avatarUrl}
+                size={34}
+              />
+            </Pressable>
             <View className="flex-row items-center gap-1">
               <Pressable
                 onPress={onPressSearch}
@@ -169,7 +204,7 @@ export function GlobalFeedScreen({
               <View className="py-6">
                 <ActivityIndicator color={colors.textMuted} />
               </View>
-            ) : null
+            ) : undefined
           }
           contentContainerStyle={quotes.length === 0 ? { flexGrow: 1 } : undefined}
           initialNumToRender={5}
@@ -179,6 +214,30 @@ export function GlobalFeedScreen({
           showsVerticalScrollIndicator={false}
         />
       </View>
+      <ProfileDrawer
+        open={isDrawerOpen}
+        profile={profile}
+        isLoggingOut={isLoggingOut}
+        onClose={() => setIsDrawerOpen(false)}
+        onNavigateProfile={() => router.push('/(tabs)/profile')}
+        onNavigateBookmarks={() => router.push('/collections')}
+        onNavigateSettings={() => router.push('/settings')}
+        onNavigateFollowers={() => {
+          if (profile) router.push(`/u/${profile.username}/followers`);
+        }}
+        onNavigateFollowing={() => {
+          if (profile) router.push(`/u/${profile.username}/following`);
+        }}
+        onLogout={() => void handleLogout()}
+      />
     </SafeAreaView>
   );
+}
+
+function showMessage(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') window.alert(`${title}\n\n${message}`);
+    return;
+  }
+  Alert.alert(title, message);
 }

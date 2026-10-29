@@ -6,6 +6,7 @@ interface KeyValueStorage {
   getString: (key: string) => string | undefined;
   set: (key: string, value: string) => void;
   delete: (key: string) => void;
+  clearAll: () => void;
 }
 
 let feedStorage: KeyValueStorage;
@@ -28,12 +29,27 @@ if (Platform.OS === "web") {
         localStorage.removeItem(key);
       }
     },
+    clearAll: () => {
+      if (typeof window === "undefined") return;
+      const keys = Object.keys(localStorage);
+      for (const key of keys) {
+        if (key.startsWith("qotes-") || key === "last_global_feed_snapshot") {
+          localStorage.removeItem(key);
+        }
+      }
+    },
   };
 } else {
   // Native iOS / Android: safely require MMKV
   try {
     const { MMKV } = require("react-native-mmkv");
-    feedStorage = new MMKV({ id: "qotes-feed-cache" });
+    const mmkv = new MMKV({ id: "qotes-feed-cache" });
+    feedStorage = {
+      getString: (key) => mmkv.getString(key),
+      set: (key, value) => mmkv.set(key, value),
+      delete: (key) => mmkv.delete(key),
+      clearAll: () => mmkv.clearAll(),
+    };
   } catch (e) {
     // Fallback if native module isn't compiled yet (e.g. in Expo Go)
     const memStore = new Map<string, string>();
@@ -41,11 +57,13 @@ if (Platform.OS === "web") {
       getString: (key: string) => memStore.get(key),
       set: (key: string, value: string) => { memStore.set(key, value); },
       delete: (key: string) => { memStore.delete(key); },
+      clearAll: () => memStore.clear(),
     };
   }
 }
 
 export { feedStorage };
+export const clearPersistentCache = () => feedStorage.clearAll();
 
 export const authStorage = {
   async getTokens() {

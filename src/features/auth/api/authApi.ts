@@ -1,6 +1,6 @@
 import type { ImagePickerAsset } from 'expo-image-picker';
 
-import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../../../shared/lib/env';
+import { ApiRequestError, apiClient } from '../../../core/api/client';
 import type { FormValues } from '../lib/validation';
 
 const SIGNUP_PATH = '/auth/signup';
@@ -16,61 +16,18 @@ export class ApiError extends Error {
     }
 }
 
-type ApiResponse = {
-    data?: unknown;
-    message?: unknown;
-};
-
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function getMessage(response: unknown): string | undefined {
-    if (!isRecord(response)) return undefined;
-
-    const message = response.message;
-    if (typeof message === 'string') return message;
-    if (Array.isArray(message) && message.every((item) => typeof item === 'string')) {
-        return message.join(' ');
-    }
-
-    return undefined;
-}
-
-async function post(path: string, body: string | FormData): Promise<ApiResponse | null> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
+async function post(path: string, body: unknown): Promise<unknown> {
     try {
-        const response = await fetch(`${API_BASE_URL}${path}`, {
-            method: 'POST',
-            headers: body instanceof FormData
-                ? { Accept: 'application/json' }
-                : { Accept: 'application/json', 'Content-Type': 'application/json' },
-            body,
-            signal: controller.signal,
-        });
-
-        let json: unknown = null;
-        try {
-            json = await response.json();
-        } catch (error) {
-            if (controller.signal.aborted) throw error;
-        }
-
-        if (!response.ok) {
-            throw new ApiError(response.status, getMessage(json) || 'Something went wrong. Try again.');
-        }
-
-        return isRecord(json) ? json as ApiResponse : null;
+        return await apiClient.post<unknown>(path, body, undefined, false);
     } catch (error) {
-        if (error instanceof ApiError) throw error;
-        const message = controller.signal.aborted
-            ? 'The request timed out. Please try again.'
-            : 'Network error. Check your connection and try again.';
-        throw new ApiError(0, message);
-    } finally {
-        clearTimeout(timer);
+        if (error instanceof ApiRequestError) {
+            throw new ApiError(error.status, error.message);
+        }
+        throw error;
     }
 }
 
@@ -85,13 +42,12 @@ export async function signup(values: FormValues, avatar: ImagePickerAsset | null
     if (values.bio.trim()) payload.bio = values.bio.trim();
 
     if (!avatar) {
-        await post(SIGNUP_PATH, JSON.stringify(payload));
+        await post(SIGNUP_PATH, payload);
         return;
     }
 
     const form = new FormData();
     Object.entries(payload).forEach(([key, value]) => form.append(key, value));
-    // React Native fetch accepts a URI-backed file object for multipart uploads.
     form.append('avatar', {
         uri: avatar.uri,
         name: avatar.fileName ?? 'avatar',
@@ -105,11 +61,10 @@ export async function signin(payload: { identifier: string; password: string }):
     if (!identifier) throw new ApiError(400, 'Username or email is required.');
     if (!payload.password) throw new ApiError(400, 'Password is required.');
 
-    const response = await post(LOGIN_PATH, JSON.stringify({
+    const data = await post(LOGIN_PATH, {
         identifier,
         password: payload.password,
-    }));
-    const data = response?.data;
+    });
     if (!isRecord(data) || typeof data.accessToken !== 'string' || !data.accessToken) {
         throw new ApiError(500, 'The server returned an invalid login response.');
     }
