@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios';
 
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../../shared/lib/env';
 import { authStorage } from '../../shared/lib/storage';
+import { showGlobalErrorToast } from '../../shared/stores/global-error-toast.store';
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
@@ -17,6 +18,7 @@ export class ApiRequestError extends Error {
   ) {
     super(message);
     this.name = 'ApiRequestError';
+    showGlobalErrorToast(message);
   }
 }
 
