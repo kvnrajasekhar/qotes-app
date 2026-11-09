@@ -18,7 +18,7 @@ export class ApiRequestError extends Error {
   ) {
     super(message);
     this.name = 'ApiRequestError';
-    showGlobalErrorToast(message);
+    if (status !== 401) showGlobalErrorToast(message);
   }
 }
 
@@ -26,7 +26,7 @@ type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
-  authenticated?: boolean;
+  authenticated?: boolean | 'optional';
 };
 
 function responseMessage(value: unknown): string | undefined {
@@ -45,8 +45,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
     if (options.authenticated !== false) {
       const { accessToken } = await authStorage.getTokens();
-      if (!accessToken) throw new ApiRequestError(401, 'You are signed out. Please log in again.');
-      headers.Authorization = `Bearer ${accessToken}`;
+      if (!accessToken && options.authenticated !== 'optional') {
+        throw new ApiRequestError(401, 'You are signed out. Please log in again.');
+      }
+      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
     }
 
     const response = await axiosClient.request<unknown>({
@@ -89,7 +91,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 export const apiClient = {
   get: <T>(path: string, signal?: AbortSignal, authenticated = true) =>
     apiRequest<T>(path, { signal, authenticated }),
-  post: <T>(path: string, body?: unknown, signal?: AbortSignal, authenticated = true) =>
+  post: <T>(
+    path: string,
+    body?: unknown,
+    signal?: AbortSignal,
+    authenticated: boolean | 'optional' = true,
+  ) =>
     apiRequest<T>(path, { method: 'POST', body, signal, authenticated }),
   patch: <T>(path: string, body: unknown, signal?: AbortSignal) =>
     apiRequest<T>(path, { method: 'PATCH', body, signal }),

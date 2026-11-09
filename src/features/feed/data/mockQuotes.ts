@@ -60,3 +60,6 @@ export function getMockQuotes(category: FeedCategory = 'All'): QuoteItem[] {
   if (category === 'All') return MOCK_QUOTES;
   return MOCK_QUOTES.filter((q) => q.category.toLowerCase() === category.toLowerCase());
 }
+
+/** Sample quotes have ids like "mock-albert-camus" and never touch the network. */
+export const isMockQuoteId = (id: string): boolean => id.startsWith('mock-');

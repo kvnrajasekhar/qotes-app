@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -57,5 +57,9 @@ function AuthGate() {
   }, [isReady, token, segments, router]);
 
   if (!isReady) return null;
-  return <Slot />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="compose" options={{ presentation: 'modal' }} />
+    </Stack>
+  );
 }

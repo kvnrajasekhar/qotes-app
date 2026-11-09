@@ -1,6 +1,9 @@
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Pressable, Text } from 'react-native';
 
+import { useAuth } from '../../auth/auth/AuthProvider';
+import { clearPersistentCache } from '../../../shared/lib/storage';
 import { ProfileContent } from '../components/ProfileContent';
 import { ProfileHeader } from '../components/ProfileHeader';
 import { ProfileTopBar } from '../components/ProfileTopBar';
@@ -13,16 +16,34 @@ const OWN_TABS: readonly ProfileTabKey[] = ['quotes', 'saved'];
 /** V11: the signed-in user's profile (bottom-tab "Me"). */
 export function CurrentUserProfileScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { signOut } = useAuth();
   const { profile, isLoading, isError, error, signedOut, refetch } = useCurrentUserProfile();
+
+  const goToSignIn = async () => {
+    try {
+      await signOut();
+    } catch (signOutError) {
+      console.error('Could not clear the expired session before sign-in.', signOutError);
+    }
+    queryClient.clear();
+    try {
+      clearPersistentCache();
+    } catch (cacheError) {
+      console.error('Could not clear the persisted cache before sign-in.', cacheError);
+    }
+    router.replace('/auth');
+  };
 
   if (isLoading) return <ScreenStatus kind="loading" />;
   if (signedOut) {
     return (
       <ScreenStatus
         kind="message"
-        title="You're signed out."
-        message="Sign in again to see your profile."
-        onRetry={() => router.replace('/auth')}
+        title="Your profile is waiting."
+        message="Sign in or create an account to see your profile."
+        retryLabel="Sign in / create account"
+        onRetry={() => void goToSignIn()}
       />
     );
   }

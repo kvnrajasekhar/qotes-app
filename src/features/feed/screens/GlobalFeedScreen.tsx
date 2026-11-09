@@ -11,6 +11,7 @@ import { useTheme } from '../../../shared/hooks/useTheme';
 import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
 import { fonts } from '../../../shared/tokens/typography';
 import { CategoryPills } from '../components/CategoryPills';
+import { FAB_CLEARANCE, FloatingComposeButton } from '../components/FloatingComposeButton';
 import { ProfileDrawer } from '../components/ProfileDrawer';
 import { QuoteCard } from '../components/QuoteCard';
 import { useInfiniteFeed } from '../hooks/useInfiniteFeed';
@@ -141,7 +142,7 @@ export function GlobalFeedScreen({
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white dark:bg-black">
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <View className="w-full max-w-md flex-1 self-center">
+      <View className="relative w-full max-w-md flex-1 self-center">
         {/* Sticky top bar + category rail */}
         <View className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black">
           <View className="h-14 flex-row items-center justify-between px-4">
@@ -206,13 +207,18 @@ export function GlobalFeedScreen({
               </View>
             ) : undefined
           }
-          contentContainerStyle={quotes.length === 0 ? { flexGrow: 1 } : undefined}
+          contentContainerStyle={
+            quotes.length === 0
+              ? { flexGrow: 1, paddingBottom: FAB_CLEARANCE }
+              : { paddingBottom: FAB_CLEARANCE }
+          }
           initialNumToRender={5}
           maxToRenderPerBatch={6}
           windowSize={9}
           removeClippedSubviews
           showsVerticalScrollIndicator={false}
         />
+        <FloatingComposeButton />
       </View>
       <ProfileDrawer
         open={isDrawerOpen}

@@ -29,10 +29,8 @@ export function useLogout() {
       await authApiV1.logout();
     } catch (error) {
       serverLogoutSucceeded = false;
-      if (error instanceof ApiRequestError) {
-        console.error(`POST /auth/logout failed (${error.status}): ${error.message}`);
-      } else {
-        console.error('Server logout failed; signing out locally.', error);
+      if (!(error instanceof ApiRequestError)) {
+        console.error('Unexpected server logout error; signing out locally.', error);
       }
     } finally {
       try {

@@ -23,3 +23,12 @@ export function formatRelativeTime(iso: string, now: number = Date.now()): strin
     ...(sameYear ? {} : { year: 'numeric' }),
   });
 }
+
+/** "10:30 AM · Sep 25, 2026" */
+export function formatAbsoluteDateTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const day = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `${time} \u00B7 ${day}`;
+}

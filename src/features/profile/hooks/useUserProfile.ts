@@ -65,6 +65,8 @@ export function useCurrentUserProfile() {
     isError: !profile && (identityState.error !== undefined || query.isError),
     error: identity ? query.error : identityState.error,
     refetch: identity ? query.refetch : identityState.refetch,
-    signedOut: !identityState.isLoading && !identity && !identityState.error,
+    signedOut:
+      !identityState.isLoading &&
+      (!identity || identityState.error?.status === 401 || query.error?.status === 401),
   };
 }
