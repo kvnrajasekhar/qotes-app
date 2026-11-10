@@ -43,7 +43,7 @@ export function useCurrentUserProfile() {
   const identityState = useCurrentIdentity();
   const { identity } = identityState;
   const query = useQuery<UserProfile, ApiRequestError>({
-    queryKey: ['profile', 'current', identity?.userId ?? ''],
+    queryKey: profileKeys.current(identity?.userId ?? ''),
     queryFn: async ({ signal }) => {
       const profile = await userApiV1.getCurrentProfile(signal);
       queryClient.setQueryData(profileKeys.user(profile.username), profile);

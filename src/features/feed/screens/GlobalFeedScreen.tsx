@@ -14,6 +14,7 @@ import { CategoryPills } from '../components/CategoryPills';
 import { FAB_CLEARANCE, FloatingComposeButton } from '../components/FloatingComposeButton';
 import { ProfileDrawer } from '../components/ProfileDrawer';
 import { QuoteCard } from '../components/QuoteCard';
+import { ReactionPickerSheet } from '../../reactions';
 import { useInfiniteFeed } from '../hooks/useInfiniteFeed';
 import type { FeedCategory, QuoteCreator, QuoteItem } from '../types/feed.types';
 
@@ -45,6 +46,7 @@ export function GlobalFeedScreen({
   const [category, setCategory] = useState<FeedCategory>('All');
   const [pulling, setPulling] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [reactingQuoteId, setReactingQuoteId] = useState<string | null>(null);
   const { profile } = useCurrentUserProfile();
   const { logout, isLoggingOut } = useLogout();
 
@@ -63,6 +65,14 @@ export function GlobalFeedScreen({
   const onEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const openReactions = useCallback((quote: QuoteItem) => {
+    if (onOpenReactions) {
+      onOpenReactions(quote);
+      return;
+    }
+    setReactingQuoteId(quote._id);
+  }, [onOpenReactions]);
 
   const handleLogout = async () => {
     setIsDrawerOpen(false);
@@ -85,7 +95,8 @@ export function GlobalFeedScreen({
     ({ item }) => (
       <QuoteCard
         quote={item}
-        onPressReact={onOpenReactions}
+        onPressReact={openReactions}
+        onLongPressQuote={openReactions}
         onPressRepost={onRepost}
         onToggleSave={onToggleSave}
         onPressMore={onOpenOptions}
@@ -93,7 +104,7 @@ export function GlobalFeedScreen({
         onPressQuote={onOpenQuote}
       />
     ),
-    [onOpenReactions, onRepost, onToggleSave, onOpenOptions, onOpenUser, onOpenQuote],
+    [openReactions, onRepost, onToggleSave, onOpenOptions, onOpenUser, onOpenQuote],
   );
 
   const renderEmpty = () => {
@@ -236,6 +247,7 @@ export function GlobalFeedScreen({
         }}
         onLogout={() => void handleLogout()}
       />
+      <ReactionPickerSheet quoteId={reactingQuoteId} onClose={() => setReactingQuoteId(null)} />
     </SafeAreaView>
   );
 }

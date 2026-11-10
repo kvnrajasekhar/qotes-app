@@ -22,6 +22,8 @@ export type QuoteCardProps = {
   onPressUser?: (creator: QuoteCreator) => void;
   /** Tapping the quote body, e.g. to open the detail screen. */
   onPressQuote?: (quote: QuoteItem) => void;
+  /** Long-pressing quote text opens the reaction picker. */
+  onLongPressQuote?: (quote: QuoteItem) => void;
 };
 
 function Monogram({ creator }: { creator: QuoteCreator }) {
@@ -53,6 +55,7 @@ function QuoteCardBase({
   onPressMore,
   onPressUser,
   onPressQuote,
+  onLongPressQuote,
 }: QuoteCardProps) {
   const { colors } = useThemeColors('app');
 
@@ -93,8 +96,9 @@ function QuoteCardBase({
       {/* Body */}
       <Pressable
         onPress={() => onPressQuote?.(quote)}
-        disabled={!onPressQuote}
-        accessibilityRole={onPressQuote ? 'button' : undefined}
+        onLongPress={() => onLongPressQuote?.(quote)}
+        disabled={!onPressQuote && !onLongPressQuote}
+        accessibilityRole={onPressQuote || onLongPressQuote ? 'button' : undefined}
         accessibilityLabel={`Quote by ${quote.author}: ${quote.text}`}
       >
         <Text

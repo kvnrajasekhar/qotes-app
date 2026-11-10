@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { ApiRequestError } from '../../../core/api/client';
 import { quoteApiV1 } from '../../../core/api/v1/quote.api';
+import { profileKeys, type UserProfile } from '../../profile';
 import type { QuoteItem } from '../../feed/types/feed.types';
 import type { ComposeQuoteInput } from '../types/compose.types';
 
@@ -19,8 +20,15 @@ export function useCreateQuote() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['feed'] });
-      // Own profile: quote list and the quote counter.
-      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.setQueriesData<UserProfile>({ queryKey: profileKeys.currentRoot }, (profile) =>
+        profile
+          ? {
+              ...profile,
+              stats: { ...profile.stats, quoteCount: profile.stats.quoteCount + 1 },
+            }
+          : profile,
+      );
+      void queryClient.invalidateQueries({ queryKey: ['profile', 'quotes'] });
     },
   });
 }
