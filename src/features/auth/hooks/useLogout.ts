@@ -48,7 +48,7 @@ export function useLogout() {
           console.error('Could not clear the persisted application cache.', error);
         } finally {
           queryClient.clear();
-          router.replace('/auth');
+          router.replace('/(tabs)');
           setIsLoggingOut(false);
         }
       }

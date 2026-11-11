@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../../src/shared/components/PlaceholderScreen';
+import { FollowingFeedScreen } from '../../src/features/feed/screens/FollowingFeedScreen';
 
 export default function FollowingRoute() {
-  return <PlaceholderScreen title="Following" description="Quotes from the writers you follow will appear here." />;
+  return <FollowingFeedScreen />;
 }

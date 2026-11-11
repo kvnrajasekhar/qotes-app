@@ -4,14 +4,20 @@ import {
   REACTION_TYPES,
   type FeedCategory,
   type FeedPage,
+  type FeedType,
   type QuoteCreator,
   type QuoteItem,
   type ReactionCounts,
   type ReactionType,
 } from '../types/feed.types';
 
-/** Per the API spec. NOTE: the NestJS controller currently mounts the global feed at `GET /feed`. */
-export const FEED_GLOBAL_PATH = '/feed';
+/** The current server has no global `v1` prefix; see SERVER_PATCHES.md. */
+export const FEED_PATHS: Record<FeedType, string> = {
+  global: '/feed/global',
+  following: '/feed/following',
+  discover: '/feed/discover',
+};
+export const FEED_GLOBAL_PATH = FEED_PATHS.global;
 
 export class FeedApiError extends Error {
   status: number;
@@ -65,11 +71,16 @@ function mapTags(v: unknown): string[] {
     .map((t) => (t.startsWith('#') ? t : `#${t}`));
 }
 
-export function mapQuote(raw: unknown): QuoteItem | null {
+function mapQuoteAt(raw: unknown, depth: number): QuoteItem | null {
   if (!isRecord(raw)) return null;
   const _id = asString(raw._id);
   const text = asString(raw.text);
-  if (!_id || !text) return null;
+  const isRequote = raw.isRequote === true;
+  // A plain requote ("requote to profile") carries no text of its own.
+  if (!_id || (!text && !isRequote)) return null;
+
+  const parentRaw = raw.parentQuote ?? raw.parent;
+  const parent = depth === 0 && isRecord(parentRaw) ? mapQuoteAt(parentRaw, 1) : null;
 
   return {
     _id,
@@ -84,14 +95,22 @@ export function mapQuote(raw: unknown): QuoteItem | null {
     repostsCount: asCount(raw.repostsCount ?? raw.requotes),
     isSaved: raw.isSaved === true,
     createdAt: asString(raw.createdAt),
+    isRequote,
+    parentQuoteId: asString(raw.parentQuoteId) || parent?._id || undefined,
+    parent: parent ?? undefined,
+    viewerRequoted: raw.viewerRequoted === true,
   };
 }
 
-function mapPage(data: unknown): FeedPage {
+export function mapQuote(raw: unknown): QuoteItem | null {
+  return mapQuoteAt(raw, 0);
+}
+
+export function mapPage(data: unknown): FeedPage {
   const src = isRecord(data) ? data : {};
   const pagination = isRecord(src.pagination) ? src.pagination : {};
   const quotes = (Array.isArray(src.quotes) ? src.quotes : [])
-    .map(mapQuote)
+    .map((q) => mapQuote(q))
     .filter((q): q is QuoteItem => q !== null);
 
   const cursor = asString(pagination.cursor ?? pagination.nextCursor) || null;
@@ -100,16 +119,16 @@ function mapPage(data: unknown): FeedPage {
 
 /* ------------------------------------------------------------------ */
 
-export interface FetchGlobalFeedParams {
+export interface FetchFeedParams {
+  type?: FeedType;
   cursor?: string;
   limit: number;
   category?: FeedCategory;
   signal?: AbortSignal;
 }
 
-export async function fetchGlobalFeed({ cursor, limit, category, signal }: FetchGlobalFeedParams): Promise<FeedPage> {
+export async function fetchFeed({ type = 'global', cursor, limit, category, signal }: FetchFeedParams): Promise<FeedPage> {
   const { accessToken } = await authStorage.getTokens();
-  if (!accessToken) throw new FeedApiError(401, 'You are signed out. Please log in again.');
 
   const query = [`limit=${limit}`];
   if (cursor) query.push(`cursor=${encodeURIComponent(cursor)}`);
@@ -122,8 +141,10 @@ export async function fetchGlobalFeed({ cursor, limit, category, signal }: Fetch
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE_URL}${FEED_GLOBAL_PATH}?${query.join('&')}`, {
-      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+    const headers: HeadersInit = { Accept: 'application/json' };
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    res = await fetch(`${API_BASE_URL}${FEED_PATHS[type]}?${query.join('&')}`, {
+      headers,
       signal: controller.signal,
     });
   } catch {

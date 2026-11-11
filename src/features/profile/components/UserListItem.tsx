@@ -2,8 +2,8 @@ import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import type { FollowListUser } from '../types/profile.types';
-import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
 import { FollowButton, type FollowState } from './FollowButton';
+import { UserAvatar } from './UserAvatar';
 
 type UserListItemProps = {
   user: FollowListUser;
@@ -28,7 +28,7 @@ function UserListItemBase({ user, isSelf, onPress, onToggleFollow, pending = fal
         accessibilityLabel={`View @${user.username}`}
         className="flex-1 flex-row items-center gap-3 active:opacity-70"
       >
-        <MonogramAvatar username={user.username} displayName={user.displayName} avatarUrl={user.avatarUrl} size={44} />
+        <UserAvatar username={user.username} displayName={user.displayName} avatarUrl={user.avatarUrl} size={44} />
         <View className="flex-1">
           <Text numberOfLines={1} className="text-[15px] font-bold text-neutral-900 dark:text-neutral-100">
             @{user.username}

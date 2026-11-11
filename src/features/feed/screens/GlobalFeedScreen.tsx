@@ -1,80 +1,54 @@
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Search } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Platform, Pressable, RefreshControl, Text, View, type ListRenderItem } from 'react-native';
+import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLogout } from '../../auth';
 import { useCurrentUserProfile } from '../../profile';
-import { useTheme } from '../../../shared/hooks/useTheme';
 import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
+import { useTheme } from '../../../shared/hooks/useTheme';
 import { fonts } from '../../../shared/tokens/typography';
+import { CategoryEmptyState } from '../components/CategoryEmptyState';
 import { CategoryPills } from '../components/CategoryPills';
-import { FAB_CLEARANCE, FloatingComposeButton } from '../components/FloatingComposeButton';
+import { FeedEmptyState } from '../components/FeedEmptyState';
+import { FloatingComposeButton } from '../components/FloatingComposeButton';
 import { ProfileDrawer } from '../components/ProfileDrawer';
-import { QuoteCard } from '../components/QuoteCard';
-import { ReactionPickerSheet } from '../../reactions';
+import { QuoteFeedList } from '../components/QuoteFeedList';
 import { useInfiniteFeed } from '../hooks/useInfiniteFeed';
-import type { FeedCategory, QuoteCreator, QuoteItem } from '../types/feed.types';
+import { useQuoteInteractions } from '../hooks/useQuoteInteractions';
+import type { FeedCategory } from '../types/feed.types';
 
 export type GlobalFeedScreenProps = {
+  /** Defaults to router.push('/compose'). */
+  onCompose?: () => void;
   onPressSearch?: () => void;
+  /** Defaults to navigating to the notifications tab. */
   onPressNotifications?: () => void;
-  onOpenReactions?: (quote: QuoteItem) => void;
-  onRepost?: (quote: QuoteItem) => void;
-  onToggleSave?: (quote: QuoteItem, saved: boolean) => void;
-  onOpenOptions?: (quote: QuoteItem) => void;
-  onOpenUser?: (creator: QuoteCreator) => void;
-  onOpenQuote?: (quote: QuoteItem) => void;
 };
 
-const keyExtractor = (item: QuoteItem) => item._id;
-
-export function GlobalFeedScreen({
-  onPressSearch,
-  onPressNotifications,
-  onOpenReactions,
-  onRepost,
-  onToggleSave,
-  onOpenOptions,
-  onOpenUser,
-  onOpenQuote,
-}: GlobalFeedScreenProps) {
+export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotifications }: GlobalFeedScreenProps) {
   const router = useRouter();
   const { colors, isDark } = useTheme('app');
   const [category, setCategory] = useState<FeedCategory>('All');
-  const [pulling, setPulling] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [reactingQuoteId, setReactingQuoteId] = useState<string | null>(null);
-  const { profile } = useCurrentUserProfile();
+  const feed = useInfiniteFeed({ type: 'global', category });
+  const interactions = useQuoteInteractions();
+  const { profile, signedOut } = useCurrentUserProfile();
   const { logout, isLoggingOut } = useLogout();
 
-  const { quotes, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isLoading, isError, error } =
-    useInfiniteFeed(category);
+  const handleCompose = useCallback(() => {
+    if (onCompose) onCompose();
+    else router.push('/compose');
+  }, [onCompose, router]);
 
-  const onRefresh = useCallback(async () => {
-    setPulling(true);
-    try {
-      await refetch();
-    } finally {
-      setPulling(false);
-    }
-  }, [refetch]);
+  const handleNotifications = useCallback(() => {
+    if (onPressNotifications) onPressNotifications();
+    else router.navigate('/notifications');
+  }, [onPressNotifications, router]);
 
-  const onEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const openReactions = useCallback((quote: QuoteItem) => {
-    if (onOpenReactions) {
-      onOpenReactions(quote);
-      return;
-    }
-    setReactingQuoteId(quote._id);
-  }, [onOpenReactions]);
-
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     setIsDrawerOpen(false);
     const result = await logout();
     if (!result.serverLogoutSucceeded) {
@@ -89,88 +63,35 @@ export function GlobalFeedScreen({
         'You are signed out in this app, but stored credentials could not be removed.',
       );
     }
-  };
-
-  const renderItem: ListRenderItem<QuoteItem> = useCallback(
-    ({ item }) => (
-      <QuoteCard
-        quote={item}
-        onPressReact={openReactions}
-        onLongPressQuote={openReactions}
-        onPressRepost={onRepost}
-        onToggleSave={onToggleSave}
-        onPressMore={onOpenOptions}
-        onPressUser={onOpenUser}
-        onPressQuote={onOpenQuote}
-      />
-    ),
-    [openReactions, onRepost, onToggleSave, onOpenOptions, onOpenUser, onOpenQuote],
-  );
-
-  const renderEmpty = () => {
-    if (isLoading) {
-      return (
-        <View className="flex-1 items-center justify-center py-24">
-          <ActivityIndicator color={colors.text} />
-        </View>
-      );
-    }
-
-    if (isError) {
-      return (
-        <View className="flex-1 items-center justify-center gap-4 px-8 py-24">
-          <Text style={{ fontFamily: fonts.serif }} className="text-center text-xl text-neutral-900 dark:text-neutral-100">
-            The feed went quiet.
-          </Text>
-          <Text className="text-center text-sm text-neutral-600 dark:text-neutral-400">
-            {error instanceof Error ? error.message : 'Could not load quotes.'}
-          </Text>
-          <Pressable
-            onPress={onRefresh}
-            accessibilityRole="button"
-            className="rounded-full bg-black px-5 py-2.5 active:opacity-80 dark:bg-white"
-          >
-            <Text className="text-sm font-bold text-white dark:text-black">Try again</Text>
-          </Pressable>
-        </View>
-      );
-    }
-
-    return (
-      <View className="flex-1 items-center justify-center gap-2 px-8 py-24">
-        <Text style={{ fontFamily: fonts.serif }} className="text-center text-xl leading-8 text-neutral-900 dark:text-neutral-100">
-          {category === 'All' ? '\u201CWords worth keeping start with one.\u201D' : `Nothing in ${category} yet.`}
-        </Text>
-        <Text className="text-center text-sm text-neutral-600 dark:text-neutral-400">
-          {category === 'All'
-            ? 'Follow a few voices or share the first quote.'
-            : 'Try another category, or be the first to share a quote here.'}
-        </Text>
-      </View>
-    );
-  };
+  }, [logout]);
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-white dark:bg-black">
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <View className="relative w-full max-w-md flex-1 self-center">
-        {/* Sticky top bar + category rail */}
+      <View className="w-full max-w-md flex-1 self-center">
         <View className="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black">
           <View className="h-14 flex-row items-center justify-between px-4">
             <Pressable
               onPress={() => setIsDrawerOpen(true)}
+              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Open navigation menu"
-              hitSlop={8}
               className="h-11 w-11 items-center justify-center active:opacity-70"
             >
               <MonogramAvatar
-                username={profile?.username ?? 'me'}
+                username={profile?.username ?? 'qotes'}
                 displayName={profile?.displayName}
                 avatarUrl={profile?.avatarUrl}
                 size={34}
               />
             </Pressable>
+            <Text
+              accessibilityRole="header"
+              style={{ fontFamily: fonts.serifBold, fontWeight: '700' }}
+              className="text-[22px] tracking-tight text-neutral-900 dark:text-neutral-100"
+            >
+              Qotes
+            </Text>
             <View className="flex-row items-center gap-1">
               <Pressable
                 onPress={onPressSearch}
@@ -182,7 +103,7 @@ export function GlobalFeedScreen({
                 <Search size={22} color={colors.text} />
               </Pressable>
               <Pressable
-                onPress={onPressNotifications}
+                onPress={handleNotifications}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Notifications"
@@ -195,45 +116,33 @@ export function GlobalFeedScreen({
           <CategoryPills value={category} onChange={setCategory} />
         </View>
 
-        <FlatList
-          data={quotes}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            <RefreshControl
-              refreshing={pulling}
-              onRefresh={onRefresh}
-              tintColor={colors.text}
-              colors={[colors.text]}
-              progressBackgroundColor={colors.background}
-            />
+        <QuoteFeedList
+          data={feed.quotes}
+          isLoading={feed.isLoading}
+          hasNextPage={Boolean(feed.hasNextPage)}
+          isFetchingNextPage={feed.isFetchingNextPage}
+          fetchNextPage={feed.fetchNextPage}
+          refetch={feed.refetch}
+          handlers={interactions.handlers}
+          empty={
+            category !== 'All' ? (
+              <CategoryEmptyState category={category} />
+            ) : (
+              <FeedEmptyState
+                onWrite={handleCompose}
+                errorMessage={feed.isError ? (feed.error instanceof Error ? feed.error.message : 'Could not reach the server.') : undefined}
+                onRetry={feed.isError ? () => void feed.refetch() : undefined}
+              />
+            )
           }
-          ListEmptyComponent={renderEmpty}
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View className="py-6">
-                <ActivityIndicator color={colors.textMuted} />
-              </View>
-            ) : undefined
-          }
-          contentContainerStyle={
-            quotes.length === 0
-              ? { flexGrow: 1, paddingBottom: FAB_CLEARANCE }
-              : { paddingBottom: FAB_CLEARANCE }
-          }
-          initialNumToRender={5}
-          maxToRenderPerBatch={6}
-          windowSize={9}
-          removeClippedSubviews
-          showsVerticalScrollIndicator={false}
         />
-        <FloatingComposeButton />
+
+        <FloatingComposeButton onPress={handleCompose} />
       </View>
       <ProfileDrawer
         open={isDrawerOpen}
         profile={profile}
+        isSignedOut={signedOut}
         isLoggingOut={isLoggingOut}
         onClose={() => setIsDrawerOpen(false)}
         onNavigateProfile={() => router.push('/(tabs)/profile')}
@@ -245,9 +154,11 @@ export function GlobalFeedScreen({
         onNavigateFollowing={() => {
           if (profile) router.push(`/u/${profile.username}/following`);
         }}
+        onNavigateSignIn={() => router.push('/auth')}
+        onNavigateSignUp={() => router.push('/auth?mode=signup')}
         onLogout={() => void handleLogout()}
       />
-      <ReactionPickerSheet quoteId={reactingQuoteId} onClose={() => setReactingQuoteId(null)} />
+      {interactions.sheets}
     </SafeAreaView>
   );
 }

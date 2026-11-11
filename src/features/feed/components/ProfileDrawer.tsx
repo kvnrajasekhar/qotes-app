@@ -1,4 +1,4 @@
-import { Bookmark, LogOut, Settings, UserRound } from 'lucide-react-native';
+import { Bookmark, LogIn, LogOut, Settings, UserPlus, UserRound } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -20,6 +20,7 @@ import type { UserProfile } from '../../profile';
 type ProfileDrawerProps = {
   open: boolean;
   profile?: UserProfile;
+  isSignedOut: boolean;
   isLoggingOut: boolean;
   onClose: () => void;
   onNavigateProfile: () => void;
@@ -27,12 +28,15 @@ type ProfileDrawerProps = {
   onNavigateSettings: () => void;
   onNavigateFollowers: () => void;
   onNavigateFollowing: () => void;
+  onNavigateSignIn: () => void;
+  onNavigateSignUp: () => void;
   onLogout: () => void;
 };
 
 export function ProfileDrawer({
   open,
   profile,
+  isSignedOut,
   isLoggingOut,
   onClose,
   onNavigateProfile,
@@ -40,6 +44,8 @@ export function ProfileDrawer({
   onNavigateSettings,
   onNavigateFollowers,
   onNavigateFollowing,
+  onNavigateSignIn,
+  onNavigateSignUp,
   onLogout,
 }: ProfileDrawerProps) {
   const { width: screenWidth } = useWindowDimensions();
@@ -124,60 +130,92 @@ export function ProfileDrawer({
           className="bg-white px-4 dark:bg-black"
           accessibilityViewIsModal
         >
-          <View className="pb-4">
-            <MonogramAvatar
-              username={profile?.username ?? 'me'}
-              displayName={profile?.displayName}
-              avatarUrl={profile?.avatarUrl}
-              size={48}
-            />
-            <Text className="mt-3 text-base font-bold text-neutral-900 dark:text-neutral-100">
-              {profile?.displayName ?? 'Your profile'}
-            </Text>
-            <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              @{profile?.username ?? 'username'}
-            </Text>
-            <View className="mt-3 flex-row gap-4">
-              <Metric
-                count={profile?.stats.followingCount ?? 0}
-                label="Following"
-                onPress={() => navigate(onNavigateFollowing)}
-              />
-              <Metric
-                count={profile?.stats.followerCount ?? 0}
-                label="Followers"
-                onPress={() => navigate(onNavigateFollowers)}
-              />
+          {!isSignedOut ? (
+            <View className="pb-4">
+              {profile ? (
+                <>
+                  <MonogramAvatar
+                    username={profile.username}
+                    displayName={profile.displayName}
+                    avatarUrl={profile.avatarUrl}
+                    size={48}
+                  />
+                  <Text className="mt-3 text-base font-bold text-neutral-900 dark:text-neutral-100">
+                    {profile.displayName}
+                  </Text>
+                  <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">@{profile.username}</Text>
+                  <View className="mt-3 flex-row gap-4">
+                    <Metric
+                      count={profile.stats.followingCount}
+                      label="Following"
+                      onPress={() => navigate(onNavigateFollowing)}
+                    />
+                    <Metric
+                      count={profile.stats.followerCount}
+                      label="Followers"
+                      onPress={() => navigate(onNavigateFollowers)}
+                    />
+                  </View>
+                </>
+              ) : (
+                <Text className="text-base font-bold text-neutral-900 dark:text-neutral-100">Your profile</Text>
+              )}
             </View>
-          </View>
+          ) : (
+            <View className="pb-4">
+              <Text className="text-lg font-bold text-neutral-900 dark:text-neutral-100">Welcome to Qotes</Text>
+              <Text className="mt-2 text-sm leading-5 text-neutral-600 dark:text-neutral-400">
+                Sign in or create an account to save quotes and follow writers.
+              </Text>
+            </View>
+          )}
 
           <View className="border-t border-neutral-200 pt-2 dark:border-neutral-800">
-            <NavigationRow
-              label="Profile"
-              icon={<UserRound size={20} color={colors.text} />}
-              onPress={() => navigate(onNavigateProfile)}
-            />
-            <NavigationRow
-              label="Bookmarks"
-              icon={<Bookmark size={20} color={colors.text} />}
-              onPress={() => navigate(onNavigateBookmarks)}
-            />
-            <NavigationRow
-              label="Settings"
-              icon={<Settings size={20} color={colors.text} />}
-              onPress={() => navigate(onNavigateSettings)}
-            />
+            {!isSignedOut ? (
+              <>
+                <NavigationRow
+                  label="Profile"
+                  icon={<UserRound size={20} color={colors.text} />}
+                  onPress={() => navigate(onNavigateProfile)}
+                />
+                <NavigationRow
+                  label="Bookmarks"
+                  icon={<Bookmark size={20} color={colors.text} />}
+                  onPress={() => navigate(onNavigateBookmarks)}
+                />
+                <NavigationRow
+                  label="Settings"
+                  icon={<Settings size={20} color={colors.text} />}
+                  onPress={() => navigate(onNavigateSettings)}
+                />
+              </>
+            ) : (
+              <>
+                <NavigationRow
+                  label="Sign in"
+                  icon={<LogIn size={20} color={colors.text} />}
+                  onPress={() => navigate(onNavigateSignIn)}
+                />
+                <NavigationRow
+                  label="Create account"
+                  icon={<UserPlus size={20} color={colors.text} />}
+                  onPress={() => navigate(onNavigateSignUp)}
+                />
+              </>
+            )}
           </View>
 
-          <View className="mt-auto border-t border-neutral-200 pt-2 dark:border-neutral-800">
-            <NavigationRow
-              label={isLoggingOut ? 'Logging out…' : 'Log Out'}
-              icon={<LogOut size={20} color={colors.danger} />}
-              labelClassName="text-red-700 dark:text-red-400"
-              disabled={isLoggingOut}
-              onPress={confirmLogout}
-            />
-          </View>
+          {!isSignedOut ? (
+            <View className="mt-auto border-t border-neutral-200 pt-2 dark:border-neutral-800">
+              <NavigationRow
+                label={isLoggingOut ? 'Logging out…' : 'Log Out'}
+                icon={<LogOut size={20} color={colors.danger} />}
+                labelClassName="text-red-700 dark:text-red-400"
+                disabled={isLoggingOut}
+                onPress={confirmLogout}
+              />
+            </View>
+          ) : null}
         </Animated.View>
       </View>
     </Modal>

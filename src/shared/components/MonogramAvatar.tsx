@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Image, Text, View } from 'react-native';
 
 type MonogramAvatarProps = {
@@ -8,33 +8,30 @@ type MonogramAvatarProps = {
   size?: number;
 };
 
-export function MonogramAvatar({ username, displayName, avatarUrl, size = 44 }: MonogramAvatarProps) {
-  const [failedUrl, setFailedUrl] = useState<string>();
-  const label = (displayName?.trim() || username).trim();
-  const initials = label.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?';
-  const showImage = Boolean(avatarUrl && avatarUrl !== failedUrl);
+/** Photo when available, otherwise the first letter on a neutral circle. */
+function MonogramAvatarBase({ username, displayName, avatarUrl, size = 40 }: MonogramAvatarProps) {
+  const [failed, setFailed] = useState(false);
+  const letter = ((displayName || username).trim()[0] ?? '?').toUpperCase();
+  const box = { width: size, height: size, borderRadius: size / 2 };
 
-  if (showImage) {
+  if (avatarUrl && !failed) {
     return (
       <Image
         source={{ uri: avatarUrl }}
-        onError={() => setFailedUrl(avatarUrl)}
-        accessibilityLabel={`${label}'s profile photo`}
+        onError={() => setFailed(true)}
         accessibilityIgnoresInvertColors
-        style={{ width: size, height: size }}
-        className="rounded-full bg-neutral-200 dark:bg-neutral-800"
+        style={box}
+        className="bg-neutral-200 dark:bg-neutral-800"
       />
     );
   }
-
   return (
-    <View
-      accessible
-      accessibilityLabel={`${label} profile initials`}
-      style={{ width: size, height: size }}
-      className="items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-800"
-    >
-      <Text className="text-base font-semibold text-neutral-700 dark:text-neutral-300">{initials}</Text>
+    <View style={box} className="items-center justify-center bg-neutral-200 dark:bg-neutral-800">
+      <Text style={{ fontSize: size * 0.4 }} className="font-semibold text-neutral-700 dark:text-neutral-300">
+        {letter}
+      </Text>
     </View>
   );
 }
+
+export const MonogramAvatar = memo(MonogramAvatarBase);

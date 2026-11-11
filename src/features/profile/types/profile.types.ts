@@ -1,7 +1,7 @@
 import type { ImagePickerAsset } from 'expo-image-picker';
 
 export const BIO_MAX_LENGTH = 200;
-export const NAME_MAX_LENGTH = 50;
+export const NAME_MAX_LENGTH = 40;
 
 export type ProfileTabKey = 'quotes' | 'saved';
 export type FollowListKind = 'followers' | 'following';
@@ -28,7 +28,6 @@ export interface UserProfile {
   isFollowing: boolean;
   /** Does this user follow the signed-in viewer? */
   followsYou: boolean;
-  isBlocked?: boolean;
 }
 
 export interface ViewerProfile extends UserProfile {
@@ -57,4 +56,13 @@ export interface UpdateProfileInput {
   bio: string;
   /** Newly picked image. Omit to keep the current avatar. */
   avatar?: ImagePickerAsset | null;
+}
+
+export interface SuggestedWriter {
+  _id: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string;
+  followerCount: number;
+  isFollowing: boolean;
 }

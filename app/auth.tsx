@@ -1,8 +1,9 @@
 // app/auth.tsx
-import React from "react";
-import AuthScreen from "../src/features/auth/components/AuthScreen";
-import "../global.css";
+import { useLocalSearchParams } from 'expo-router';
+import AuthScreen from '../src/features/auth/components/AuthScreen';
+import '../global.css';
 
 export default function AuthRoute() {
-  return <AuthScreen />;
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  return <AuthScreen initialMode={mode === 'signup' ? 'signup' : 'signin'} />;
 }

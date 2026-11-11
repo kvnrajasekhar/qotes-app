@@ -1,34 +1,75 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { useTheme } from '../../../shared/hooks/useTheme';
+import { useThemeColors } from '../../../shared/hooks/useTheme';
+import { fonts } from '../../../shared/tokens/typography';
 
-type ScreenStatusProps = {
-  kind: 'loading' | 'message';
-  title?: string;
-  message?: string;
-  onRetry?: () => void;
-  retryLabel?: string;
-  onBack?: () => void;
-};
+type ScreenStatusProps =
+  | { kind: 'loading' }
+  | {
+      kind: 'message';
+      title: string;
+      message?: string;
+      onRetry?: () => void;
+      retryLabel?: string;
+      secondaryAction?: { label: string; onPress: () => void };
+      onBack?: () => void;
+    };
 
-export function ScreenStatus({ kind, title, message, onRetry, retryLabel = 'Try again', onBack }: ScreenStatusProps) {
-  const { colors } = useTheme('app');
-  if (kind === 'loading') {
+/** Full-screen loading / error / not-found state shared by the profile screens. */
+export function ScreenStatus(props: ScreenStatusProps) {
+  const { colors } = useThemeColors('app');
+
+  if (props.kind === 'loading') {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <ActivityIndicator accessibilityLabel="Loading" color={colors.text} />
+        <ActivityIndicator color={colors.text} />
       </View>
     );
   }
+
   return (
-    <View className="flex-1 items-center justify-center gap-3 bg-white px-8 dark:bg-black">
-      <Text accessibilityRole="header" className="text-center text-lg font-bold text-neutral-900 dark:text-neutral-100">
-        {title}
+    <View className="flex-1 items-center justify-center bg-white px-8 dark:bg-black">
+      <Text
+        style={{ fontFamily: fonts.serifBold, fontWeight: '700' }}
+        className="text-center text-[24px] text-neutral-900 dark:text-neutral-100"
+      >
+        {props.title}
       </Text>
-      {message ? <Text className="text-center text-sm leading-5 text-neutral-600 dark:text-neutral-400">{message}</Text> : null}
-      <View className="mt-2 flex-row gap-3">
-        {onBack ? <Pressable onPress={onBack} accessibilityRole="button" className="min-h-11 justify-center px-4"><Text className="font-semibold text-neutral-700 dark:text-neutral-300">Go back</Text></Pressable> : null}
-        {onRetry ? <Pressable onPress={onRetry} accessibilityRole="button" className="min-h-11 justify-center rounded-full bg-neutral-900 px-5 dark:bg-neutral-100"><Text className="font-bold text-white dark:text-black">{retryLabel}</Text></Pressable> : null}
+      {props.message ? (
+        <Text className="mt-2 text-center text-[15px] leading-6 text-neutral-600 dark:text-neutral-400">
+          {props.message}
+        </Text>
+      ) : null}
+      <View className="mt-6 flex-row gap-3">
+        {props.onBack ? (
+          <Pressable
+            onPress={props.onBack}
+            accessibilityRole="button"
+            className="h-11 items-center justify-center rounded-full border border-neutral-900 px-6 active:opacity-80 dark:border-neutral-100"
+          >
+            <Text className="text-[14px] font-bold text-neutral-900 dark:text-neutral-100">Go back</Text>
+          </Pressable>
+        ) : null}
+        {props.onRetry ? (
+          <Pressable
+            onPress={props.onRetry}
+            accessibilityRole="button"
+            className="h-11 items-center justify-center rounded-full bg-black px-6 active:opacity-80 dark:bg-white"
+          >
+            <Text className="text-[14px] font-bold text-white dark:text-black">{props.retryLabel ?? 'Try again'}</Text>
+          </Pressable>
+        ) : null}
+        {props.secondaryAction ? (
+          <Pressable
+            onPress={props.secondaryAction.onPress}
+            accessibilityRole="button"
+            className="h-11 items-center justify-center rounded-full border border-neutral-900 px-6 active:opacity-80 dark:border-neutral-100"
+          >
+            <Text className="text-[14px] font-bold text-neutral-900 dark:text-neutral-100">
+              {props.secondaryAction.label}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );

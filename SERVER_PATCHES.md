@@ -43,3 +43,63 @@ It calls `getUserByUsername(userId)`. Use `req.user.username` (the app currently
 
 ## 7. Block / report endpoints don't exist
 `SafetyController` has no routes, so the profile "..." menu shows a "not available yet" notice until they exist.
+
+---
+
+# Added for compose / quote detail / reactions
+
+## 8. Reaction routes don't exist  (reactions.controller.ts)
+`ReactionsController` is empty, and the working logic lives in the legacy `reaction.service.ts` object.
+The app calls `POST /reaction/:quoteId/toggle` with `{ type, action }` and ignores the response body.
+Wire it to the sliding-window rate limit + Redis + Kafka path in `toggleReaction`.
+
+## 9. Reaction enum is out of date  (reaction.model.ts, reaction.worker.ts)
+The model still allows `like | inspriring | thoughtful | realatable | eye-opening`.
+Replace with `insightful | empowering | resonant | artistic | clap` (note the typos in the old values),
+and make the worker increment `reactions.<type>` with the new names.
+
+## 10. Quote responses need the viewer's reaction
+`GET /quote/:id` and the feeds should include `userReaction` (the viewer's current reaction or `null`) and
+`isSaved`, otherwise the sheet can't show your selection after a reload. Populate `creator`
+(`username firstName lastName avatarUrl`) in `getQuoteById`; today it returns a bare ObjectId.
+
+## 11. Create-quote validation
+`POST /quote` accepts any text length. Enforce 10 to 500 characters and at most 5 hashtags server-side.
+The app already blocks invalid input, but the API should not trust it.
+
+## 12. Optional: `/v1` prefix
+The spec says `/v1/...`, but `main.ts` sets no global prefix, so routes are `/quote`, `/feed`, `/user/...`.
+The feed client currently targets `/v1/feed/global` (see `FEED_GLOBAL_PATH`). Either call
+`app.setGlobalPrefix('v1')` and add `/v1` to the other clients, or point `FEED_GLOBAL_PATH` at `/feed`.
+
+---
+
+# Added for requotes, reflections, reactions list, following / discover
+
+## 13. Requotes: allow empty text and embed the root quote  (quote.model.ts, quotes.service.ts, feeds.service.ts)
+- `text` is `required`, so a plain "requote to profile" (empty text) fails validation. Relax it when `isRequote` is true.
+- Feed and detail responses must embed the root: `.populate('parentQuoteId')` and return it as `parentQuote`
+  (plus `creator` populated on both). The app renders `isRequote && parentQuote` as a composite card
+  (non-empty `text`) or an "@user requoted" banner over the original (empty `text`).
+- Add `viewerRequoted: boolean` (does the viewer already have a requote of this quote?). The existing unique
+  index `(creator, parentQuoteId)` already blocks duplicates; the sheets disable themselves from this flag.
+- Hide requotes whose parent was deleted or hidden (`isHiddenBySystem`).
+
+## 14. Reflections endpoint  (quotes.controller.ts)
+`GET /quote/:id/reflections?cursor&limit` -> `{ quotes: Quote[], pagination: { nextCursor, hasMore } }`:
+quotes where `parentQuoteId = :id`, `isRequote = true`, and `text != ''`, newest first. A 404 reads as "none yet".
+Declare it before `@Get(':id')`.
+
+## 15. "Who reacted" endpoint  (reactions.controller.ts)
+`GET /reaction/:quoteId?type&cursor&limit` -> `{ users: [{ _id, type, createdAt, user: { _id, username, avatarUrl } }], pagination }`.
+`getQuoteReactions` in the legacy `reaction.service.ts` already builds this; it projects `avatar`, but the field is `avatarUrl`
+(the app accepts both).
+
+## 16. Feed routes
+The app calls `/v1/feed/global`, `/v1/feed/following`, `/v1/feed/discover` (see `FEED_PATHS` in `feedApi.ts`);
+the controller serves `/feed`, `/feed/following`, `/feed/discover`. Fix with a global `v1` prefix or edit `FEED_PATHS`.
+`following` filters by `creator`; make sure it also returns requotes made by followed users.
+
+## 17. Suggested writers
+`GET /user/suggested/public` returns the most-followed users, including the viewer and people they already follow.
+Exclude both when a viewer is known (the app already hides the viewer client-side).

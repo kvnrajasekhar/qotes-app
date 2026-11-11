@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../../src/shared/components/PlaceholderScreen';
+import { DiscoverFeedScreen } from '../../src/features/feed/screens/DiscoverFeedScreen';
 
 export default function DiscoverRoute() {
-  return <PlaceholderScreen title="Discover" description="Explore trending quotes and suggested writers." />;
+  return <DiscoverFeedScreen />;
 }

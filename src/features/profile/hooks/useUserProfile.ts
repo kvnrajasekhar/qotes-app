@@ -45,7 +45,8 @@ export function useCurrentUserProfile() {
   const query = useQuery<UserProfile, ApiRequestError>({
     queryKey: profileKeys.current(identity?.userId ?? ''),
     queryFn: async ({ signal }) => {
-      const profile = await userApiV1.getCurrentProfile(signal);
+      if (!identity) throw new ApiRequestError(401, 'You are signed out. Please log in again.');
+      const profile = await userApiV1.getCurrentProfile(identity.username, signal);
       queryClient.setQueryData(profileKeys.user(profile.username), profile);
       return profile;
     },

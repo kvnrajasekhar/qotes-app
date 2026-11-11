@@ -28,6 +28,25 @@ export interface QuoteItem {
   repostsCount: number;
   isSaved?: boolean;
   createdAt: string;
+  /** True when this item is a requote of another quote. */
+  isRequote?: boolean;
+  parentQuoteId?: string;
+  /** The requoted root quote, embedded by the server. */
+  parent?: QuoteItem;
+  /** Has the signed-in viewer already requoted this quote? */
+  viewerRequoted?: boolean;
+}
+
+export type FeedType = 'global' | 'following' | 'discover';
+
+/** Interaction callbacks shared by every surface that renders quotes. */
+export interface QuoteHandlers {
+  onPressReact?: (quote: QuoteItem) => void;
+  onPressRepost?: (quote: QuoteItem) => void;
+  onToggleSave?: (quote: QuoteItem, saved: boolean) => void;
+  onPressMore?: (quote: QuoteItem) => void;
+  onPressUser?: (creator: QuoteCreator) => void;
+  onPressQuote?: (quote: QuoteItem) => void;
 }
 
 export interface FeedPagination {

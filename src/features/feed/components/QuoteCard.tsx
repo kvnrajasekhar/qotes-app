@@ -1,4 +1,4 @@
-import { MoreHorizontal } from 'lucide-react-native';
+import { MoreHorizontal, Repeat2 } from 'lucide-react-native';
 import { memo, useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 
@@ -22,8 +22,8 @@ export type QuoteCardProps = {
   onPressUser?: (creator: QuoteCreator) => void;
   /** Tapping the quote body, e.g. to open the detail screen. */
   onPressQuote?: (quote: QuoteItem) => void;
-  /** Long-pressing quote text opens the reaction picker. */
-  onLongPressQuote?: (quote: QuoteItem) => void;
+  /** Username of someone who requoted this quote to their profile; renders a context banner. */
+  requotedBy?: string;
 };
 
 function Monogram({ creator }: { creator: QuoteCreator }) {
@@ -55,7 +55,7 @@ function QuoteCardBase({
   onPressMore,
   onPressUser,
   onPressQuote,
-  onLongPressQuote,
+  requotedBy,
 }: QuoteCardProps) {
   const { colors } = useThemeColors('app');
 
@@ -68,6 +68,13 @@ function QuoteCardBase({
       testID={`quote-card-${quote._id}`}
       className="w-full max-w-md self-center border-b border-neutral-200 bg-white px-4 pb-3 pt-4 dark:border-neutral-800 dark:bg-black"
     >
+      {requotedBy ? (
+        <View className="mb-2 flex-row items-center gap-1.5" accessibilityLabel={`Requoted by ${requotedBy}`}>
+          <Repeat2 size={14} color={colors.textMuted} />
+          <Text className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400">@{requotedBy} requoted</Text>
+        </View>
+      ) : null}
+
       {/* Header */}
       <View className="flex-row items-center justify-between">
         <Pressable
@@ -96,9 +103,8 @@ function QuoteCardBase({
       {/* Body */}
       <Pressable
         onPress={() => onPressQuote?.(quote)}
-        onLongPress={() => onLongPressQuote?.(quote)}
-        disabled={!onPressQuote && !onLongPressQuote}
-        accessibilityRole={onPressQuote || onLongPressQuote ? 'button' : undefined}
+        disabled={!onPressQuote}
+        accessibilityRole={onPressQuote ? 'button' : undefined}
         accessibilityLabel={`Quote by ${quote.author}: ${quote.text}`}
       >
         <Text

@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { Pressable, Text } from 'react-native';
+import { Alert, Platform, Pressable, Text } from 'react-native';
 
+import { useLogout } from '../../auth';
 import { useAuth } from '../../auth/auth/AuthProvider';
 import { clearPersistentCache } from '../../../shared/lib/storage';
 import { ProfileContent } from '../components/ProfileContent';
@@ -18,9 +19,22 @@ export function CurrentUserProfileScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
+  const { logout } = useLogout();
   const { profile, isLoading, isError, error, signedOut, refetch } = useCurrentUserProfile();
 
-  const goToSignIn = async () => {
+  const confirmLogout = () => {
+    const performLogout = () => void logout();
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Log out of Qotes?')) performLogout();
+      return;
+    }
+    Alert.alert('Log out of Qotes?', 'You will need to sign in again to access your account.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log Out', style: 'destructive', onPress: performLogout },
+    ]);
+  };
+
+  const goToAuth = async (mode: 'signin' | 'signup') => {
     try {
       await signOut();
     } catch (signOutError) {
@@ -32,7 +46,7 @@ export function CurrentUserProfileScreen() {
     } catch (cacheError) {
       console.error('Could not clear the persisted cache before sign-in.', cacheError);
     }
-    router.replace('/auth');
+    router.replace(mode === 'signup' ? '/auth?mode=signup' : '/auth');
   };
 
   if (isLoading) return <ScreenStatus kind="loading" />;
@@ -42,8 +56,9 @@ export function CurrentUserProfileScreen() {
         kind="message"
         title="Your profile is waiting."
         message="Sign in or create an account to see your profile."
-        retryLabel="Sign in / create account"
-        onRetry={() => void goToSignIn()}
+        retryLabel="Sign in"
+        onRetry={() => void goToAuth('signin')}
+        secondaryAction={{ label: 'Create account', onPress: () => void goToAuth('signup') }}
       />
     );
   }
@@ -63,7 +78,7 @@ export function CurrentUserProfileScreen() {
       profile={profile}
       tabs={OWN_TABS}
       onRefreshProfile={refetch}
-      top={<ProfileTopBar title={profile.displayName} />}
+      top={<ProfileTopBar title={profile.displayName} onMore={confirmLogout} />}
       header={
         <ProfileHeader
           profile={profile}

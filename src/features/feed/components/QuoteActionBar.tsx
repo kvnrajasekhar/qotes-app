@@ -108,8 +108,8 @@ function QuoteActionBarBase({ quote, variant = 'inline', onPressReact, onPressRe
       <Action
         {...shared}
         Icon={Repeat2}
-        label={`Echo, ${quote.repostsCount}`}
-        caption={stacked ? `Echo ${formatCount(quote.repostsCount)}` : formatCount(quote.repostsCount)}
+        label={`Requote, ${quote.repostsCount}`}
+        caption={stacked ? `Requote ${formatCount(quote.repostsCount)}` : formatCount(quote.repostsCount)}
         onPress={() => onPressRepost?.(quote)}
       />
       <Action

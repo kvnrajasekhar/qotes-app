@@ -2,18 +2,24 @@ import { useMemo } from 'react';
 import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 
 import { feedStorage } from '../../../shared/lib/storage';
-import { fetchGlobalFeed } from '../api/feedApi';
-import type { FeedCategory, FeedPage, QuoteItem } from '../types/feed.types';
+import { fetchFeed } from '../api/feedApi';
+import type { FeedCategory, FeedPage, FeedType, QuoteItem } from '../types/feed.types';
 
 export const FEED_PAGE_SIZE = 10;
 const SNAPSHOT_KEY = 'last_global_feed_snapshot';
 const SNAPSHOT_VERSION = 1;
 
 export const feedKeys = {
-  global: (category: FeedCategory, limit: number) => ['feed', 'global', category, limit] as const,
+  list: (type: FeedType, category: FeedCategory, limit: number) => ['feed', type, category, limit] as const,
 };
 
-/* ----------------------- MMKV snapshot (sync) ----------------------- */
+export interface UseInfiniteFeedOptions {
+  type?: FeedType;
+  category?: FeedCategory;
+  limit?: number;
+}
+
+/* ----------------------- MMKV snapshot (sync, global feed only) ----------------------- */
 
 function readSnapshot(): FeedPage | null {
   try {
@@ -32,7 +38,7 @@ function writeSnapshot(page: FeedPage): void {
     if (page.quotes.length === 0) return;
     feedStorage.set(SNAPSHOT_KEY, JSON.stringify({ v: SNAPSHOT_VERSION, page }));
   } catch {
-    // Disk cache is best-effort; never fail a network success because of it.
+    // Disk cache is best-effort.
   }
 }
 
@@ -44,7 +50,10 @@ export function clearFeedSnapshot(): void {
 /* ------------------------------ helpers ------------------------------ */
 
 const matchesCategory = (quote: QuoteItem, category: FeedCategory) =>
-  category === 'All' || quote.category.toLowerCase() === category.toLowerCase();
+  category === 'All' ||
+  quote.category.toLowerCase() === category.toLowerCase() ||
+  // a requote inherits the category of the quote it embeds
+  quote.parent?.category.toLowerCase() === category.toLowerCase();
 
 function flattenUnique(pages: FeedPage[] | undefined, category: FeedCategory): QuoteItem[] {
   if (!pages) return [];
@@ -62,15 +71,24 @@ function flattenUnique(pages: FeedPage[] | undefined, category: FeedCategory): Q
 
 /* -------------------------------- hook -------------------------------- */
 
-export function useInfiniteFeed(category: FeedCategory = 'All', limit: number = FEED_PAGE_SIZE) {
-  // Read once per category, synchronously, so the first render already has content.
-  const snapshot = useMemo(() => (category === 'All' ? readSnapshot() : null), [category]);
+/**
+ * Paginated feed. `useInfiniteFeed({ type: 'following' })`, `{ type: 'discover', category }`, or the
+ * legacy shorthand `useInfiniteFeed('Philosophy')` for the global feed.
+ */
+export function useInfiniteFeed(input: UseInfiniteFeedOptions | FeedCategory = {}) {
+  const options: UseInfiniteFeedOptions = typeof input === 'string' ? { category: input } : input;
+  const type = options.type ?? 'global';
+  const category = options.category ?? 'All';
+  const limit = options.limit ?? FEED_PAGE_SIZE;
+
+  const useSnapshot = type === 'global' && category === 'All';
+  const snapshot = useMemo(() => (useSnapshot ? readSnapshot() : null), [useSnapshot]);
 
   const query = useInfiniteQuery({
-    queryKey: feedKeys.global(category, limit),
+    queryKey: feedKeys.list(type, category, limit),
     queryFn: async ({ pageParam, signal }) => {
-      const page = await fetchGlobalFeed({ cursor: pageParam, limit, category, signal });
-      if (!pageParam && category === 'All') writeSnapshot(page);
+      const page = await fetchFeed({ type, cursor: pageParam, limit, category, signal });
+      if (!pageParam && useSnapshot) writeSnapshot(page);
       return page;
     },
     initialPageParam: undefined as string | undefined,
@@ -78,9 +96,9 @@ export function useInfiniteFeed(category: FeedCategory = 'All', limit: number = 
     initialData: snapshot
       ? ({ pages: [snapshot], pageParams: [undefined] } satisfies InfiniteData<FeedPage, string | undefined>)
       : undefined,
-    // Mark hydrated data as already stale so it paints instantly AND revalidates on mount.
+    // Hydrated data paints instantly AND revalidates on mount.
     initialDataUpdatedAt: 0,
-    // Fail fast so an unreachable server falls through to the empty state, not a 7s spinner.
+    // Fail fast so an unreachable server falls through to the empty state, not a long spinner.
     retry: 1,
   });
 
@@ -92,7 +110,6 @@ export function useInfiniteFeed(category: FeedCategory = 'All', limit: number = 
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
     refetch: query.refetch,
-    // isRefetching is also true while paginating; expose the "real" refetch only.
     isRefetching: query.isRefetching && !query.isFetchingNextPage,
     isLoading: query.isLoading,
     isError: query.isError,

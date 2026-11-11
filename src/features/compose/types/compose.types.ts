@@ -28,3 +28,6 @@ export interface ComposeQuoteInput {
   /** Without the leading "#". */
   tags: string[];
 }
+
+/** "Requote with thoughts" reflections. */
+export const REQUOTE_COMMENTARY_MAX = 200;

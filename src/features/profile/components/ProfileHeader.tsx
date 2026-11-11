@@ -4,9 +4,9 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useThemeColors } from '../../../shared/hooks/useTheme';
 import { fonts } from '../../../shared/tokens/typography';
-import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
 import { formatCount } from '../../feed/utils/format';
 import type { UserProfile } from '../types/profile.types';
+import { UserAvatar } from './UserAvatar';
 
 type ProfileHeaderProps = {
   profile: UserProfile;
@@ -18,36 +18,23 @@ type ProfileHeaderProps = {
   onPressFollowing: () => void;
 };
 
-function Metric({
-  value,
-  label,
-  onPress,
-  textColor,
-  labelColor,
-}: {
-  value: number;
-  label: string;
-  onPress?: () => void;
-  textColor: string;
-  labelColor: string;
-}) {
+function Metric({ value, label, onPress }: { value: number; label: string; onPress?: () => void }) {
   const content = (
-    <View className="items-center gap-1">
-      <Text style={{ color: textColor, fontVariant: ['tabular-nums'] }} className="text-[18px] font-bold">
+    <Text className="text-[14px] text-neutral-600 dark:text-neutral-400">
+      <Text style={{ fontVariant: ['tabular-nums'] }} className="font-bold text-neutral-900 dark:text-neutral-100">
         {formatCount(value)}
       </Text>
-      <Text style={{ color: labelColor }} className="text-[12px]">
-        {label}
-      </Text>
-    </View>
+      {` ${label}`}
+    </Text>
   );
-  if (!onPress) return <View className="min-h-11 flex-1 items-center justify-center">{content}</View>;
+  if (!onPress) return content;
   return (
     <Pressable
       onPress={onPress}
+      hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={`${formatCount(value)} ${label}`}
-      className="min-h-11 flex-1 items-center justify-center active:opacity-60"
+      className="active:opacity-60"
     >
       {content}
     </Pressable>
@@ -73,7 +60,7 @@ export function ProfileHeader({ profile, action, badge, onPressFollowers, onPres
       <View className="px-4 pb-4">
         <View className="-mt-10 flex-row items-end justify-between">
           <View className="rounded-full border-4 border-white bg-white dark:border-black dark:bg-black">
-            <MonogramAvatar
+            <UserAvatar
               username={profile.username}
               displayName={profile.displayName}
               avatarUrl={profile.avatarUrl}
@@ -111,10 +98,10 @@ export function ProfileHeader({ profile, action, badge, onPressFollowers, onPres
           </View>
         ) : null}
 
-        <View className="mt-3 flex-row">
-          <Metric value={profile.stats.quoteCount} label="Quotes" textColor={colors.text} labelColor={colors.textMuted} />
-          <Metric value={profile.stats.followerCount} label="Followers" onPress={onPressFollowers} textColor={colors.text} labelColor={colors.textMuted} />
-          <Metric value={profile.stats.followingCount} label="Following" onPress={onPressFollowing} textColor={colors.text} labelColor={colors.textMuted} />
+        <View className="mt-3 flex-row flex-wrap items-center gap-x-4 gap-y-1">
+          <Metric value={profile.stats.quoteCount} label="Quotes" />
+          <Metric value={profile.stats.followerCount} label="Followers" onPress={onPressFollowers} />
+          <Metric value={profile.stats.followingCount} label="Following" onPress={onPressFollowing} />
         </View>
       </View>
     </View>

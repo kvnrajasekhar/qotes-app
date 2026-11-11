@@ -44,12 +44,19 @@ function AuthGate() {
     if (!isReady) return;
 
     const currentSegment = segments[0] as string | undefined;
+    const childSegment = segments[1] as string | undefined;
     // Login lives at /auth; recovery screens live in the (auth) route group.
     const inAuthFlow = currentSegment === 'auth' || currentSegment === '(auth)';
+    const guestFeedOrProfile =
+      currentSegment === '(tabs)' &&
+      (childSegment === undefined || childSegment === 'index' || childSegment === 'profile');
+    const publicQuoteDetail = currentSegment === 'quote' && segments.length === 2;
+    const publicUserProfile = currentSegment === 'u' && segments.length === 2;
 
     if (!token) {
-      if (!inAuthFlow) {
-        router.replace('/auth');
+      const guestAccessible = inAuthFlow || guestFeedOrProfile || publicQuoteDetail || publicUserProfile;
+      if (!guestAccessible) {
+        router.replace(!currentSegment || currentSegment === 'index' ? '/(tabs)' : '/auth');
       }
     } else if (inAuthFlow || !currentSegment) {
       router.replace('/(tabs)');
@@ -60,6 +67,7 @@ function AuthGate() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="compose" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="requote/[id]" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

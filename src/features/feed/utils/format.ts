@@ -4,7 +4,7 @@ export function formatCount(value: number): string {
   if (value < 1000) return String(Math.floor(value));
   const units: [number, string][] = [
     [1_000_000, 'M'],
-    [1_000, 'k'],
+    [1_000, 'K'],
   ];
   for (const [size, suffix] of units) {
     if (value >= size) {

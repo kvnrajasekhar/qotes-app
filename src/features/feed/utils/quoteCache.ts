@@ -1,6 +1,5 @@
 import type { InfiniteData, QueryClient, QueryKey } from '@tanstack/react-query';
 
-import { MOCK_QUOTES } from '../data/mockQuotes';
 import { quoteKeys } from '../hooks/quoteKeys';
 import type { FeedPage, QuoteItem } from '../types/feed.types';
 
@@ -9,7 +8,7 @@ const LIST_ROOTS: readonly QueryKey[] = [['feed'], ['profile', 'quotes'], ['prof
 
 export type CacheSnapshot = [QueryKey, unknown];
 
-/** Looks for a quote in the detail cache, then any cached list, then dev sample data. */
+/** Looks for a quote in the detail cache, then any cached list. */
 export function findCachedQuote(queryClient: QueryClient, id: string): QuoteItem | undefined {
   const detail = queryClient.getQueryData<QuoteItem>(quoteKeys.detail(id));
   if (detail) return detail;
@@ -17,12 +16,12 @@ export function findCachedQuote(queryClient: QueryClient, id: string): QuoteItem
   for (const root of LIST_ROOTS) {
     for (const [, data] of queryClient.getQueriesData<InfiniteData<FeedPage>>({ queryKey: root })) {
       for (const page of data?.pages ?? []) {
-        const hit = page.quotes.find((q) => q._id === id);
+        const hit = page.quotes.find((q) => q._id === id) ?? page.quotes.find((q) => q.parent?._id === id)?.parent;
         if (hit) return hit;
       }
     }
   }
-  return MOCK_QUOTES.find((q) => q._id === id);
+  return undefined;
 }
 
 /** Makes sure ['quote', id] exists so optimistic edits (and rollbacks) have something to act on. */
@@ -58,7 +57,9 @@ export function patchQuoteEverywhere(
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              quotes: page.quotes.map((q) => (q._id === id ? updater(q) : q)),
+              quotes: page.quotes.map((q) =>
+                q._id === id ? updater(q) : q.parent?._id === id ? { ...q, parent: updater(q.parent) } : q,
+              ),
             })),
           }
         : old,

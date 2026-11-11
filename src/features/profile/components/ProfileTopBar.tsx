@@ -1,7 +1,6 @@
-import { ArrowLeft, MoreHorizontal } from 'lucide-react-native';
+import { MoreHorizontal } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
-
-import { useThemeColors } from '../../../shared/hooks/useTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ProfileTopBarProps = {
   title: string;
@@ -9,23 +8,38 @@ type ProfileTopBarProps = {
   onMore?: () => void;
 };
 
+/** Fixed dark bar (stays put while the list scrolls) so light status-bar icons are always legible. */
 export function ProfileTopBar({ title, onBack, onMore }: ProfileTopBarProps) {
-  const { colors } = useThemeColors('app');
+  const insets = useSafeAreaInsets();
   return (
-    <View className="h-14 w-full max-w-md flex-row items-center justify-between self-center border-b border-neutral-200 bg-white px-2 dark:border-neutral-800 dark:bg-black">
-      {onBack ? (
-        <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Go back" className="h-11 w-11 items-center justify-center">
-          <ArrowLeft size={22} color={colors.text} />
-        </Pressable>
-      ) : <View className="w-11" />}
-      <Text accessibilityRole="header" numberOfLines={1} className="flex-1 text-center text-[16px] font-bold text-neutral-900 dark:text-neutral-100">
-        {title}
-      </Text>
-      {onMore ? (
-        <Pressable onPress={onMore} accessibilityRole="button" accessibilityLabel="More profile options" className="h-11 w-11 items-center justify-center">
-          <MoreHorizontal size={22} color={colors.text} />
-        </Pressable>
-      ) : <View className="w-11" />}
+    <View style={{ paddingTop: insets.top }} className="bg-neutral-900 dark:bg-neutral-800">
+      <View className="h-14 items-center justify-center px-14">
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            className="absolute left-3 h-9 w-9 items-center justify-center rounded-full bg-black/50 active:opacity-70"
+          >
+            <Text style={{ color: '#FFFFFF', fontSize: 26, lineHeight: 30 }}>‹</Text>
+          </Pressable>
+        ) : null}
+        <Text numberOfLines={1} accessibilityRole="header" className="text-[16px] font-bold text-white">
+          {title}
+        </Text>
+        {onMore ? (
+          <Pressable
+            onPress={onMore}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="More options"
+            className="absolute right-3 h-9 w-9 items-center justify-center active:opacity-70"
+          >
+            <MoreHorizontal size={22} color="#FFFFFF" />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
