@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Search } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useLogout } from '../../auth';
@@ -87,13 +87,24 @@ export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotification
                 size={34}
               />
             </Pressable>
-            <Text
-              accessibilityRole="header"
-              style={{ fontFamily: fonts.serifBold, fontWeight: '700' }}
-              className="text-[22px] tracking-tight text-neutral-900 dark:text-neutral-100"
+            <View
+              pointerEvents="none"
+              className="absolute inset-x-0 flex-row items-center justify-center gap-1"
             >
-              Qotes
-            </Text>
+              <Image
+                source={require('../../../assets/images/qotes-logo-main.png')}
+                resizeMode="contain"
+                accessible={false}
+                className="h-8 w-8"
+              />
+              {/* <Text
+                accessibilityRole="header"
+                style={{ fontFamily: fonts.serifBold, fontWeight: '700' }}
+                className="text-[20px] tracking-tight text-neutral-900 dark:text-neutral-100"
+              >
+                Qotes
+              </Text> */}
+            </View>
             <View className="flex-row items-center gap-1">
               <Pressable
                 onPress={onPressSearch}
