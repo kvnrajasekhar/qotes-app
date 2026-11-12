@@ -587,7 +587,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### 4.1 Global Feed
 
-**Endpoint**: `GET /feed/global`  
+**Endpoint**: `GET /feed`
 **Authentication**: Bearer JWT  
 **Rate Limit**: 30 requests per minute
 
@@ -1667,12 +1667,12 @@ Decoded:
 
 **Initial Request**:
 ```
-GET /feed/global?limit=10
+GET /feed?limit=10
 ```
 
 **Subsequent Request**:
 ```
-GET /feed/global?limit=10&cursor=eyJpZCI6IjUwN2YxZjc3YmNmODZjZDc5OTQzOTAxMSIsImNyZWF0ZWRBdCI6IjIwMjYtMDktMjVUMTA6MzA6MDAuMDAwWiJ9
+GET /feed?limit=10&cursor=eyJpZCI6IjUwN2YxZjc3YmNmODZjZDc5OTQzOTAxMSIsImNyZWF0ZWRBdCI6IjIwMjYtMDktMjVUMTA6MzA6MDAuMDAwWiJ9
 ```
 
 **Response Meta**:

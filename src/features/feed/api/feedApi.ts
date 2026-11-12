@@ -1,5 +1,4 @@
-import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../../../shared/lib/env';
-import { authStorage } from '../../../shared/lib/storage';
+import { ApiRequestError, apiClient } from '../../../core/api/client';
 import {
   REACTION_TYPES,
   type FeedCategory,
@@ -11,9 +10,9 @@ import {
   type ReactionType,
 } from '../types/feed.types';
 
-/** The current server has no global `v1` prefix; see SERVER_PATCHES.md. */
+/** The server serves the global feed at its controller root (`GET /feed`). */
 export const FEED_PATHS: Record<FeedType, string> = {
-  global: '/feed/global',
+  global: '/feed',
   following: '/feed/following',
   discover: '/feed/discover',
 };
@@ -128,35 +127,21 @@ export interface FetchFeedParams {
 }
 
 export async function fetchFeed({ type = 'global', cursor, limit, category, signal }: FetchFeedParams): Promise<FeedPage> {
-  const { accessToken } = await authStorage.getTokens();
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (cursor) query.set('cursor', cursor);
+  if (category && category !== 'All') query.set('category', category);
 
-  const query = [`limit=${limit}`];
-  if (cursor) query.push(`cursor=${encodeURIComponent(cursor)}`);
-  if (category && category !== 'All') query.push(`category=${encodeURIComponent(category)}`);
-
-  // Combine caller cancellation (TanStack Query) with our own timeout.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  signal?.addEventListener('abort', () => controller.abort());
-
-  let res: Response;
   try {
-    const headers: HeadersInit = { Accept: 'application/json' };
-    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
-    res = await fetch(`${API_BASE_URL}${FEED_PATHS[type]}?${query.join('&')}`, {
-      headers,
-      signal: controller.signal,
-    });
-  } catch {
-    throw new FeedApiError(0, 'Network error. Check your connection and try again.');
-  } finally {
-    clearTimeout(timer);
+    const data = await apiClient.get<unknown>(
+      `${FEED_PATHS[type]}?${query.toString()}`,
+      signal,
+      'optional',
+    );
+    return mapPage(data);
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw new FeedApiError(error.status, error.message);
+    }
+    throw error;
   }
-
-  const json = (await res.json().catch(() => null)) as { message?: unknown; data?: unknown } | null;
-  if (!res.ok) {
-    const message = typeof json?.message === 'string' ? json.message : 'Could not load your feed.';
-    throw new FeedApiError(res.status, message);
-  }
-  return mapPage(json?.data);
 }

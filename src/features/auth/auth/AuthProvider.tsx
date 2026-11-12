@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { authStorage } from '../../../shared/lib/storage';
+import { SESSION_IDENTITY_KEY } from '../../../shared/lib/session';
 
 type AuthContextValue = {
     token: string | null;
@@ -19,16 +21,14 @@ const defaultValue: AuthContextValue = {
 const AuthContext = createContext<AuthContextValue>(defaultValue);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const queryClient = useQueryClient();
     const [token, setToken] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         let active = true;
-        Promise.all([
-            authStorage.getTokens(),
-            new Promise((resolve) => setTimeout(resolve, 2000)),
-        ])
-            .then(([{ accessToken }]) => {
+        authStorage.getTokens()
+            .then(({ accessToken }) => {
                 if (active) setToken(accessToken);
             })
             .catch((error: unknown) => {
@@ -50,16 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             signIn: async (next: string) => {
                 await authStorage.setTokens(next);
                 setToken(next);
+                void queryClient.invalidateQueries({ queryKey: SESSION_IDENTITY_KEY });
+                void queryClient.invalidateQueries({ queryKey: ['feed'] });
             },
             signOut: async () => {
                 try {
                     await authStorage.clear();
                 } finally {
                     setToken(null);
+                    queryClient.setQueryData(SESSION_IDENTITY_KEY, null);
                 }
             },
         }),
-        [token, isReady],
+        [token, isReady, queryClient],
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

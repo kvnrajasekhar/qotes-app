@@ -16,6 +16,7 @@ import { FeedEmptyState } from '../components/FeedEmptyState';
 import { FloatingComposeButton } from '../components/FloatingComposeButton';
 import { ProfileDrawer } from '../components/ProfileDrawer';
 import { QuoteFeedList } from '../components/QuoteFeedList';
+import { FeedApiError } from '../api/feedApi';
 import { useInfiniteFeed } from '../hooks/useInfiniteFeed';
 import { useQuoteInteractions } from '../hooks/useQuoteInteractions';
 import type { FeedCategory } from '../types/feed.types';
@@ -37,6 +38,7 @@ export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotification
   const interactions = useQuoteInteractions();
   const { profile, signedOut } = useCurrentUserProfile();
   const { logout, isLoggingOut } = useLogout();
+  const needsSignIn = feed.error instanceof FeedApiError && feed.error.status === 401;
 
   const handleCompose = useCallback(() => {
     if (onCompose) onCompose();
@@ -130,8 +132,15 @@ export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotification
             ) : (
               <FeedEmptyState
                 onWrite={handleCompose}
-                errorMessage={feed.isError ? (feed.error instanceof Error ? feed.error.message : 'Could not reach the server.') : undefined}
-                onRetry={feed.isError ? () => void feed.refetch() : undefined}
+                errorMessage={
+                  needsSignIn
+                    ? 'Sign in to load the global feed.'
+                    : feed.isError
+                      ? (feed.error instanceof Error ? feed.error.message : 'Could not reach the server.')
+                      : undefined
+                }
+                onRetry={feed.isError && !needsSignIn ? () => void feed.refetch() : undefined}
+                onSignIn={needsSignIn ? () => router.push('/auth') : undefined}
               />
             )
           }

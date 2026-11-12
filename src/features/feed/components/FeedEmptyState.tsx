@@ -7,9 +7,10 @@ type FeedEmptyStateProps = {
   /** Present when the request failed rather than returned nothing. */
   errorMessage?: string;
   onRetry?: () => void;
+  onSignIn?: () => void;
 };
 
-export function FeedEmptyState({ onWrite, errorMessage, onRetry }: FeedEmptyStateProps) {
+export function FeedEmptyState({ onWrite, errorMessage, onRetry, onSignIn }: FeedEmptyStateProps) {
   return (
     <View className="flex-1 items-center justify-center px-8 py-16">
       <Text
@@ -47,6 +48,11 @@ export function FeedEmptyState({ onWrite, errorMessage, onRetry }: FeedEmptyStat
           {onRetry ? (
             <Pressable onPress={onRetry} accessibilityRole="button" hitSlop={8} className="active:opacity-70">
               <Text className="text-[14px] font-bold text-neutral-900 underline dark:text-neutral-100">Try again</Text>
+            </Pressable>
+          ) : null}
+          {onSignIn ? (
+            <Pressable onPress={onSignIn} accessibilityRole="button" className="min-h-11 justify-center px-4">
+              <Text className="text-[14px] font-bold text-neutral-900 underline dark:text-neutral-100">Sign in</Text>
             </Pressable>
           ) : null}
         </View>

@@ -89,7 +89,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 }
 
 export const apiClient = {
-  get: <T>(path: string, signal?: AbortSignal, authenticated = true) =>
+  get: <T>(path: string, signal?: AbortSignal, authenticated: boolean | 'optional' = true) =>
     apiRequest<T>(path, { signal, authenticated }),
   post: <T>(
     path: string,
