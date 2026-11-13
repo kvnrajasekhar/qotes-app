@@ -1,8 +1,9 @@
 import * as Clipboard from 'expo-clipboard';
-import { Bookmark, Check, Clipboard as ClipboardIcon, Repeat2, Sparkles } from 'lucide-react-native';
+import { Bookmark, Check, Clipboard as ClipboardIcon, Repeat2 } from 'lucide-react-native';
 import { memo, useCallback, useEffect, useRef, useState, type ComponentType } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { InsightfulIcon } from '../../reactions';
 import { useThemeColors } from '../../../shared/hooks/useTheme';
 import { REACTION_TYPES, type QuoteItem } from '../types/feed.types';
 import { formatCount } from '../utils/format';
@@ -10,6 +11,10 @@ import { formatCount } from '../utils/format';
 const ICON_SIZE = 20;
 
 type IconComponent = ComponentType<{ size?: number; color?: string; strokeWidth?: number; fill?: string }>;
+
+const InsightfulActionIcon: IconComponent = ({ size, color, strokeWidth }) => (
+  <InsightfulIcon size={size} color={color} strokeWidth={strokeWidth} />
+);
 
 export type QuoteActionBarProps = {
   quote: QuoteItem;
@@ -99,7 +104,7 @@ function QuoteActionBarBase({ quote, variant = 'inline', onPressReact, onPressRe
     <View className={`flex-row items-center justify-between ${stacked ? 'px-2' : ''}`}>
       <Action
         {...shared}
-        Icon={Sparkles}
+        Icon={InsightfulActionIcon}
         label={`React, ${reactionTotal} reactions`}
         caption={stacked ? 'React' : formatCount(reactionTotal)}
         active={!!quote.userReaction}
