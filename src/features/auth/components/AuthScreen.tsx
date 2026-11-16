@@ -1,4 +1,5 @@
 import type { ImagePickerAsset } from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,11 +11,11 @@ import {
   ScrollView,
   Text,
   View,
-  useColorScheme,
   useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useThemeColors } from '../../../shared/hooks/useTheme';
 import * as authApi from '../api/authApi';
 import { ApiError } from '../api/authApi';
 import { useAuth } from '../auth/AuthProvider';
@@ -65,10 +66,11 @@ const SPLIT = 900;
 const NARROW = 380;
 
 export default function AuthScreen({ initialMode = 'signin' }: { initialMode?: Mode }) {
+  const router = useRouter();
   const { signIn } = useAuth();
+  const { colors: authColors, isDark } = useThemeColors('auth');
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const isDark = useColorScheme() === 'dark';
 
   const isSplit = width >= SPLIT;
   const stackNames = width < NARROW;
@@ -386,14 +388,29 @@ export default function AuthScreen({ initialMode = 'signin' }: { initialMode?: M
               </Text>
             </Pressable>
 
+            {!isSignup ? (
+              <Pressable
+                onPress={() => router.push('/forgot-password')}
+                accessibilityRole="link"
+                accessibilityLabel="Forgot password?"
+                className="h-11 self-end justify-center px-2 active:opacity-70"
+              >
+                <Text style={{ color: authColors.text }} className="font-body-semibold text-[15px]">
+                  Forgot password?
+                </Text>
+              </Pressable>
+            ) : null}
+
             <View className="flex-row flex-wrap items-center justify-center gap-x-1.5">
-              <Text className="text-[15px] text-ink/70 dark:text-mist/70">{copy.switchPrompt}</Text>
+              <Text style={{ color: authColors.textMuted }} className="text-[15px]">
+                {copy.switchPrompt}
+              </Text>
               <Pressable
                 onPress={() => switchMode(isSignup ? 'signin' : 'signup')}
                 accessibilityRole="button"
                 className="py-2"
               >
-                <Text className="font-body-semibold text-[15px] text-signal dark:text-signal-soft">
+                <Text style={{ color: authColors.text }} className="font-body-semibold text-[15px]">
                   {copy.switchAction}
                 </Text>
               </Pressable>
