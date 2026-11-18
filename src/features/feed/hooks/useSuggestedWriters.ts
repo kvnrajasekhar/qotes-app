@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { userApiV1 } from '../../../core/api/v1/user.api';
-import { useCurrentIdentity } from '../../profile/hooks/useCurrentIdentity';
+import { useCurrentIdentity } from '../../profile/public';
 import type { SuggestedWriter } from '../../profile/types/profile.types';
 import { MOCK_WRITERS } from '../data/mockWriters';
 import { IS_DEV_FALLBACK } from '../data/mockQuotes';

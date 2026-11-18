@@ -1,9 +1,8 @@
-import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MoreHorizontal } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, View, type ListRenderItem } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, Text, View, type ListRenderItem } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
@@ -157,15 +156,6 @@ export function QuoteDetailScreen({ id }: QuoteDetailScreenProps) {
     if (quote?.isRequote && !quote.text.trim() && quote.parent) router.replace(`/quote/${quote.parent._id}`);
   }, [quote, router]);
 
-  const openMenu = useCallback(() => {
-    if (!quote) return;
-    Alert.alert('Quote', undefined, [
-      { text: 'Copy quote', onPress: () => void Clipboard.setStringAsync(`${quote.text} \u2014 ${quote.author}`) },
-      { text: 'Report', onPress: () => Alert.alert('Not available yet', 'Reporting will be available soon.') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }, [quote]);
-
   const rows = useMemo<Row[]>(() => {
     if (tab === 'reactions') return [{ kind: 'tabs' }, { kind: 'breakdown' }];
     return [{ kind: 'tabs' }, ...reflections.reflections.map((q): Row => ({ kind: 'reflection', quote: q }))];
@@ -263,7 +253,7 @@ export function QuoteDetailScreen({ id }: QuoteDetailScreenProps) {
             Quote
           </Text>
           <Pressable
-            onPress={openMenu}
+            onPress={() => quote && handlers.onPressMore?.(quote)}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="More options"

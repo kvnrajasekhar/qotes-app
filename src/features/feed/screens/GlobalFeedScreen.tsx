@@ -1,11 +1,11 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Search } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Image, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useLogout } from '../../auth';
+import { useAuth, useLogout } from '../../auth';
 import { useCurrentUserProfile } from '../../profile';
 import { MonogramAvatar } from '../../../shared/components/MonogramAvatar';
 import { useTheme } from '../../../shared/hooks/useTheme';
@@ -14,12 +14,12 @@ import { CategoryEmptyState } from '../components/CategoryEmptyState';
 import { CategoryPills } from '../components/CategoryPills';
 import { FeedEmptyState } from '../components/FeedEmptyState';
 import { FloatingComposeButton } from '../components/FloatingComposeButton';
+import { LoginPromptCard } from '../components/LoginPromptCard';
 import { ProfileDrawer } from '../components/ProfileDrawer';
 import { QuoteFeedList } from '../components/QuoteFeedList';
-import { FeedApiError } from '../api/feedApi';
 import { useInfiniteFeed } from '../hooks/useInfiniteFeed';
 import { useQuoteInteractions } from '../hooks/useQuoteInteractions';
-import type { FeedCategory } from '../types/feed.types';
+import type { FeedCategory, QuoteItem } from '../types/feed.types';
 
 export type GlobalFeedScreenProps = {
   /** Defaults to router.push('/compose'). */
@@ -34,11 +34,27 @@ export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotification
   const { colors, isDark } = useTheme('app');
   const [category, setCategory] = useState<FeedCategory>('All');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const feed = useInfiniteFeed({ type: 'global', category });
   const interactions = useQuoteInteractions();
+  const { token } = useAuth();
   const { profile, signedOut } = useCurrentUserProfile();
   const { logout, isLoggingOut } = useLogout();
-  const needsSignIn = feed.error instanceof FeedApiError && feed.error.status === 401;
+
+  const handleReact = useCallback(
+    (quote: QuoteItem) => {
+      if (!token) {
+        setIsLoginPromptOpen(true);
+        return;
+      }
+      interactions.handlers.onPressReact?.(quote);
+    },
+    [interactions.handlers, token],
+  );
+  const handlers = useMemo(
+    () => ({ ...interactions.handlers, onPressReact: handleReact }),
+    [handleReact, interactions.handlers],
+  );
 
   const handleCompose = useCallback(() => {
     if (onCompose) onCompose();
@@ -136,22 +152,17 @@ export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotification
           isFetchingNextPage={feed.isFetchingNextPage}
           fetchNextPage={feed.fetchNextPage}
           refetch={feed.refetch}
-          handlers={interactions.handlers}
+          handlers={handlers}
           empty={
             category !== 'All' ? (
               <CategoryEmptyState category={category} />
             ) : (
               <FeedEmptyState
                 onWrite={handleCompose}
-                errorMessage={
-                  needsSignIn
-                    ? 'Sign in to load the global feed.'
-                    : feed.isError
-                      ? (feed.error instanceof Error ? feed.error.message : 'Could not reach the server.')
-                      : undefined
-                }
-                onRetry={feed.isError && !needsSignIn ? () => void feed.refetch() : undefined}
-                onSignIn={needsSignIn ? () => router.push('/auth') : undefined}
+                errorMessage={feed.isError
+                  ? (feed.error instanceof Error ? feed.error.message : 'Could not reach the server.')
+                  : undefined}
+                onRetry={feed.isError ? () => void feed.refetch() : undefined}
               />
             )
           }
@@ -177,6 +188,18 @@ export function GlobalFeedScreen({ onCompose, onPressSearch, onPressNotification
         onNavigateSignIn={() => router.push('/auth')}
         onNavigateSignUp={() => router.push('/auth?mode=signup')}
         onLogout={() => void handleLogout()}
+      />
+      <LoginPromptCard
+        visible={isLoginPromptOpen}
+        onDismiss={() => setIsLoginPromptOpen(false)}
+        onSignIn={() => {
+          setIsLoginPromptOpen(false);
+          router.push('/auth');
+        }}
+        onSignUp={() => {
+          setIsLoginPromptOpen(false);
+          router.push('/auth?mode=signup');
+        }}
       />
       {interactions.sheets}
     </SafeAreaView>

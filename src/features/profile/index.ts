@@ -12,7 +12,7 @@ export { ProfileTopBar } from './components/ProfileTopBar';
 export { ScreenStatus } from './components/ScreenStatus';
 export { UserListItem } from './components/UserListItem';
 export { profileKeys } from './hooks/profileKeys';
-export { useCurrentIdentity } from './hooks/useCurrentIdentity';
+export { useCurrentIdentity } from './public';
 export { useFollowList } from './hooks/useFollowList';
 export { useFollowToggle } from './hooks/useFollowToggle';
 export { useProfileQuotes } from './hooks/useProfileQuotes';

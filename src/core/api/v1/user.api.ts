@@ -214,4 +214,9 @@ export const userApiV1 = {
     const data = await apiRequest<unknown>(withQuery('/user/suggested/public', { limit }), { signal });
     return (Array.isArray(data) ? data : []).map(mapSuggestedWriter).filter((w): w is SuggestedWriter => w !== null);
   },
+
+  /** POST /preferences/not-interested */
+  async saveNotInterested(input: { type: string; targetId: string; reason?: string }): Promise<void> {
+    await apiRequest('/preferences/not-interested', { method: 'POST', body: input });
+  },
 };

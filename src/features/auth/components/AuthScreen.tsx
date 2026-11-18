@@ -410,7 +410,7 @@ export default function AuthScreen({ initialMode = 'signin' }: { initialMode?: M
                 accessibilityRole="button"
                 className="py-2"
               >
-                <Text style={{ color: authColors.text }} className="font-body-semibold text-[15px]">
+                <Text style={{ color: authColors.text }} className="font-body-semibold text-[15px]">  
                   {copy.switchAction}
                 </Text>
               </Pressable>

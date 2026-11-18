@@ -13,6 +13,13 @@ export interface CreateQuotePayload {
   hashtags: string[];
 }
 
+export interface UpdateQuotePayload {
+  text?: string;
+  author?: string;
+  category?: string;
+  hashtags?: string[];
+}
+
 function toQuote(data: unknown): QuoteItem {
   const quote = mapQuote(data);
   if (!quote) throw new ApiRequestError(502, 'Unexpected quote response from the server.');
@@ -23,6 +30,11 @@ export const quoteApiV1 = {
   /** POST /quote */
   async create(payload: CreateQuotePayload): Promise<QuoteItem> {
     return toQuote(await apiRequest(QUOTE_PATH, { method: 'POST', body: payload }));
+  },
+
+  /** PATCH /quote/:id */
+  async update(id: string, payload: UpdateQuotePayload): Promise<QuoteItem> {
+    return toQuote(await apiRequest(`${QUOTE_PATH}/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }));
   },
 
   /** GET /quote/:id */

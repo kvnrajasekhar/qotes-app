@@ -1286,6 +1286,43 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
+### 7.5 Mark a User as Not Interested
+
+**Endpoint**: `POST /preferences/not-interested`
+
+**Authentication**: Bearer JWT
+
+**Request Body**:
+```typescript
+{
+  type: "user";
+  targetId: string;  // Creator user ID
+  reason?: string;
+}
+```
+
+**Success Response (201)**: `{ success: true, statusCode: 201, message: "We'll show you less of this user.", data: preference }`. The preference object shape is not specified here.
+
+---
+
+### 7.6 Report a User
+
+**Endpoint**: `POST /safety/report`
+
+**Authentication**: Not specified; the client includes the Bearer token when one is available.
+
+**Request Body**:
+```typescript
+{
+  username: string;
+  reason?: "Spam" | "Harassment or bullying" | "Hate speech" | "Impersonation" | "Other";
+}
+```
+
+The reason is optional. The success response shape is not specified; the client treats any successful HTTP response as submitted.
+
+---
+
 ## 8. Users
 
 ### 8.1 Get User Profile
